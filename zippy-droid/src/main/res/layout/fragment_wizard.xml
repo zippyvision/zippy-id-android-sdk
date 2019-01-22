@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                                             xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+                                             android:layout_height="match_parent"
+                                             xmlns:app="http://schemas.android.com/apk/res-auto">
+    <TextView
+            android:text="Preparing:"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/preparingLabelTv"
+            android:textSize="20sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginEnd="8dp" app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="8dp" android:layout_marginTop="8dp" app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginBottom="8dp" app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintVertical_bias="0.191" app:layout_constraintHorizontal_bias="0.067"/>
+    <TextView
+            android:text="Selfie:"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/selfieLabelTv"
+            android:textSize="20sp"
+            app:layout_constraintStart_toStartOf="@+id/preparingLabelTv"
+            android:layout_marginTop="16dp"
+            app:layout_constraintTop_toBottomOf="@+id/preparingLabelTv"/>
+    <TextView
+            android:text="Document Front:"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/selfieLabelTv2"
+            android:textSize="20sp"
+            app:layout_constraintStart_toStartOf="@+id/selfieLabelTv"
+            android:layout_marginTop="16dp"
+            app:layout_constraintTop_toBottomOf="@+id/selfieLabelTv"/>
+    <TextView
+            android:text="Document Back:"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/selfieLabelTv3"
+            android:textSize="20sp"
+            app:layout_constraintStart_toStartOf="@+id/selfieLabelTv2"
+            android:layout_marginTop="16dp"
+            app:layout_constraintTop_toBottomOf="@+id/selfieLabelTv2"/>
+    <Button
+            android:text="Loading..."
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/zippyBtn"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="8dp" app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="8dp"
+            app:layout_constraintHorizontal_bias="0.571" android:layout_marginBottom="32dp"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+    <TextView
+            android:text="OK"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/preparingOkLabelTv" app:layout_constraintStart_toEndOf="@+id/preparingLabelTv"
+            android:layout_marginStart="16dp"
+            android:textSize="20sp"
+            android:visibility="invisible"
+            app:layout_constraintBaseline_toBaselineOf="@+id/preparingLabelTv"/>
+    <TextView
+            android:text="OK"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/faceOkLabelTv" app:layout_constraintStart_toEndOf="@+id/selfieLabelTv"
+            android:layout_marginStart="16dp"
+            android:textSize="20sp"
+            android:visibility="invisible"
+            app:layout_constraintBaseline_toBaselineOf="@+id/selfieLabelTv"/>
+    <TextView
+            android:text="OK"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/docFrontOkLabelTv" app:layout_constraintStart_toEndOf="@+id/selfieLabelTv2"
+            android:layout_marginStart="16dp"
+            android:textSize="20sp"
+            android:visibility="invisible"
+            app:layout_constraintBaseline_toBaselineOf="@+id/selfieLabelTv2"/>
+    <TextView
+            android:text="OK"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/docBackOkLabelTv" app:layout_constraintStart_toEndOf="@+id/selfieLabelTv3"
+            android:layout_marginStart="16dp"
+            android:textSize="20sp"
+            android:visibility="invisible"
+            app:layout_constraintBaseline_toBaselineOf="@+id/selfieLabelTv3"/>
+
+</android.support.constraint.ConstraintLayout>
