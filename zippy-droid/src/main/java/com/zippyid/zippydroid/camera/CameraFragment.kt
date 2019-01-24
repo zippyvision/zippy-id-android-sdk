@@ -9,6 +9,7 @@ import android.content.res.Configuration
 import android.graphics.*
 import android.hardware.camera2.*
 import android.media.ImageReader
+import android.opengl.Visibility
 import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
@@ -343,12 +344,20 @@ class CameraFragment : Fragment() {
 
         arguments = getArguments()
 
-        if (arguments?.getString("mode") != null) {
-            cameraId = arguments!!.getString("mode")
-            setUpCameraOutputs(width, height, arguments!!.getString("mode"))
-        } else {
+        if (arguments?.getString("mode") == "face") {
+            cameraId = "1"
+            setUpCameraOutputs(width, height, "1")
+            setFrame(View.VISIBLE, View.INVISIBLE, View.INVISIBLE)
+        } else if (arguments?.getString("mode") == "document_front") {
+            // TODO: fix error "can't support to open 0 and 1 camera simultaneously!"
             cameraId = "0"
             setUpCameraOutputs(width, height, "0")
+            setFrame(View.INVISIBLE, View.VISIBLE, View.INVISIBLE)
+        } else if (arguments?.getString("mode") == "document_back") {
+            // TODO: fix error "can't support to open 0 and 1 camera simultaneously!"
+            cameraId = "0"
+            setUpCameraOutputs(width, height, "0")
+            setFrame(View.INVISIBLE, View.INVISIBLE, View.VISIBLE)
         }
 
         configureTransform(width, height)
@@ -363,6 +372,12 @@ class CameraFragment : Fragment() {
         } catch (e: InterruptedException) {
             throw RuntimeException("Interrupted while trying to lock camera opening.", e)
         }
+    }
+
+    private fun setFrame(faceFrame: Int, documentFrontFrame: Int, documentBackFrame: Int) {
+        faceFrameIv.visibility = faceFrame
+        documentFrontFrameIv.visibility = documentFrontFrame
+        documentBackFrameIv.visibility = documentBackFrame
     }
 
     private fun configureTransform(viewWidth: Int, viewHeight: Int) {

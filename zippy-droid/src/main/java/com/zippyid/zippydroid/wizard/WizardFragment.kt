@@ -81,7 +81,7 @@ class WizardFragment : Fragment() {
                 preparingOkLabelTv?.visibility = View.VISIBLE
                 zippyBtn.text = "Take selfie"
                 zippyBtn.setOnClickListener {
-                    (activity as? ZippyActivity)?.onWizardNextStep("1")
+                    (activity as? ZippyActivity)?.onWizardNextStep("face")
                 }
             }
             ZippyActivity.ZippyState.FACE_TAKEN -> {
@@ -89,7 +89,7 @@ class WizardFragment : Fragment() {
                 faceOkLabelTv.visibility = View.VISIBLE
                 zippyBtn.text = "Take document front"
                 zippyBtn.setOnClickListener {
-                    (activity as? ZippyActivity)?.onWizardNextStep("0")
+                    (activity as? ZippyActivity)?.onWizardNextStep("document_front")
                 }
             }
             ZippyActivity.ZippyState.DOC_FRONT_TAKEN -> {
@@ -98,7 +98,7 @@ class WizardFragment : Fragment() {
                 docFrontOkLabelTv.visibility = View.VISIBLE
                 zippyBtn.text = "Take document back"
                 zippyBtn.setOnClickListener {
-                    (activity as? ZippyActivity)?.onWizardNextStep("0")
+                    (activity as? ZippyActivity)?.onWizardNextStep("document_back")
                 }
             }
             ZippyActivity.ZippyState.READY_TO_SEND -> {
