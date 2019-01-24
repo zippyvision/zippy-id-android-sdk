@@ -34,8 +34,7 @@ fun Image.toEncodedResizedPng(imageOrientation: Int): String {
     rotatedBitmap.compress(Bitmap.CompressFormat.PNG, 0 /*ignored for PNG*/, bos)
     val bitmapData = bos.toByteArray()
 
-    //TODO fix this call for older phones
-    val base64 = Base64.getEncoder().encodeToString(bitmapData)
+    val base64 = android.util.Base64.encodeToString(bitmapData, android.util.Base64.DEFAULT)
 
     base64.replace("+", "%2b")
 
