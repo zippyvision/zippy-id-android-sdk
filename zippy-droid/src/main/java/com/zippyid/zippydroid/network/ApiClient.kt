@@ -98,7 +98,7 @@ class ApiClient(private val secret: String, private val key: String, private val
         queue.add(request)
     }
 
-    fun getCountries(context: Context) {
+    fun getCountries(context: Context, asychResponse: AsyncResponse<List<Country>>) {
         val queue = Volley.newRequestQueue(context)
         val uri = "$baseUrl/sdk/countries"
 
@@ -106,11 +106,9 @@ class ApiClient(private val secret: String, private val key: String, private val
             Response.Listener<String> {
                 val listType = object : TypeToken<List<Country>>() {}.type
                 val countries = gson.fromJson<List<Country>>(it, listType)
-                Log.e(TAG, uri)
-                Log.e(TAG, countries.toString())
+                asychResponse.onSuccess(countries)
                 Log.e(TAG, "Wow! Result!")
             }, Response.ErrorListener {
-                Log.e(TAG, uri)
                 Log.e(TAG, "Error getting result!")
             })
 
