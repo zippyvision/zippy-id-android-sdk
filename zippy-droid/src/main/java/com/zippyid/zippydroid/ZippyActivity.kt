@@ -12,6 +12,7 @@ import com.zippyid.zippydroid.extension.toEncodedResizedPng
 import com.zippyid.zippydroid.network.ApiClient
 import com.zippyid.zippydroid.network.AsyncResponse
 import com.zippyid.zippydroid.network.model.SuccessResponse
+import com.zippyid.zippydroid.wizard.IDVertificationFragment
 import com.zippyid.zippydroid.wizard.WizardFragment
 
 class ZippyActivity : AppCompatActivity() {
@@ -37,7 +38,7 @@ class ZippyActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_zippy)
 
-        switchToWizard()
+        switchToIDVertification()
     }
 
     fun onWizardNextStep() {
@@ -85,13 +86,18 @@ class ZippyActivity : AppCompatActivity() {
         finish()
     }
 
-    private fun switchToCamera() {
+    fun switchToCamera() {
         supportFragmentManager.beginTransaction().replace(R.id.fragment_container_fl, CameraFragment()).commit()
         Log.d("ZIPPY", "Switched to camera!")
     }
 
-    private fun switchToWizard() {
+    fun switchToWizard() {
         supportFragmentManager.beginTransaction().replace(R.id.fragment_container_fl, WizardFragment.newInstance(state)).commit()
         Log.d("ZIPPY", "Switched to wizard!")
+    }
+
+    fun switchToIDVertification() {
+        supportFragmentManager.beginTransaction().replace(R.id.fragment_container_fl, IDVertificationFragment()).commit()
+        Log.d("ZIPPY", "Switched to ID vertification!")
     }
 }

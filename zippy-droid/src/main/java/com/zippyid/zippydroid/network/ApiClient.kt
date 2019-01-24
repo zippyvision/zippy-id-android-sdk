@@ -10,6 +10,7 @@ import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import com.zippyid.zippydroid.network.model.AuthToken
 import com.zippyid.zippydroid.network.model.SuccessResponse
+import com.zippyid.zippydroid.network.model.Country
 
 
 class ApiClient(private val secret: String, private val key: String, private val baseUrl: String) {
@@ -26,7 +27,7 @@ class ApiClient(private val secret: String, private val key: String, private val
     fun getToken(context: Context, asyncResponse: AsyncResponse<String>) {
         val queue = Volley.newRequestQueue(context)
 
-        val request = object : StringRequest(Request.Method.POST, baseUrl + REQUEST_TOKEN,
+        val request = object : StringRequest(Request.Method.POST, baseUrl + "/v1/" + REQUEST_TOKEN,
             Response.Listener<String> {
                 val authToken = gson.fromJson<AuthToken>(it, AuthToken::class.java)
                 token = authToken.token
@@ -53,7 +54,7 @@ class ApiClient(private val secret: String, private val key: String, private val
 
         Log.e(TAG, "Trying to send images!")
 
-        val request = object : StringRequest(Request.Method.POST, baseUrl + VERIFICATION,
+        val request = object : StringRequest(Request.Method.POST, baseUrl + "/v1/" + VERIFICATION,
             Response.Listener<String> {
                 Log.e(TAG, "Wow! Done!")
                 Log.d(TAG, it)
@@ -80,7 +81,7 @@ class ApiClient(private val secret: String, private val key: String, private val
     fun getResult(context: Context, customerUid: String, asyncResponse: AsyncResponse<SuccessResponse?>) {
         val queue = Volley.newRequestQueue(context)
 
-        val uri = "$baseUrl$RESULT?customer_uid=$customerUid&secret_key=$secret&api_key=$key"
+        val uri = "$baseUrl&/v1/$RESULT?customer_uid=$customerUid&secret_key=$secret&api_key=$key"
 
         val request = StringRequest(Request.Method.GET, uri,
             Response.Listener<String> {
@@ -96,4 +97,24 @@ class ApiClient(private val secret: String, private val key: String, private val
 
         queue.add(request)
     }
+
+    fun getCountries(context: Context) {
+        val queue = Volley.newRequestQueue(context)
+        val uri = "$baseUrl/sdk/countries"
+
+        val request = StringRequest(Request.Method.GET, uri,
+            Response.Listener<String> {
+                val listType = object : TypeToken<List<Country>>() {}.type
+                val countries = gson.fromJson<List<Country>>(it, listType)
+                Log.e(TAG, uri)
+                Log.e(TAG, countries.toString())
+                Log.e(TAG, "Wow! Result!")
+            }, Response.ErrorListener {
+                Log.e(TAG, uri)
+                Log.e(TAG, "Error getting result!")
+            })
+
+        queue.add(request)
+    }
 }
+
