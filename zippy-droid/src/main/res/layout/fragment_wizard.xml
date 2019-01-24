@@ -4,87 +4,155 @@
                                              android:layout_height="match_parent"
                                              xmlns:app="http://schemas.android.com/apk/res-auto">
     <TextView
-            android:text="Preparing:"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
             android:id="@+id/preparingLabelTv"
-            android:textSize="20sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginEnd="8dp" app:layout_constraintStart_toStartOf="parent"
-            android:layout_marginStart="8dp" android:layout_marginTop="8dp" app:layout_constraintTop_toTopOf="parent"
-            android:layout_marginBottom="8dp" app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintVertical_bias="0.191" app:layout_constraintHorizontal_bias="0.067"/>
-    <TextView
-            android:text="Selfie:"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/selfieLabelTv"
-            android:textSize="20sp"
-            app:layout_constraintStart_toStartOf="@+id/preparingLabelTv"
-            android:layout_marginTop="16dp"
-            app:layout_constraintTop_toBottomOf="@+id/preparingLabelTv"/>
-    <TextView
-            android:text="Document Front:"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/selfieLabelTv2"
-            android:textSize="20sp"
-            app:layout_constraintStart_toStartOf="@+id/selfieLabelTv"
-            android:layout_marginTop="16dp"
-            app:layout_constraintTop_toBottomOf="@+id/selfieLabelTv"/>
-    <TextView
-            android:text="Document Back:"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/selfieLabelTv3"
-            android:textSize="20sp"
-            app:layout_constraintStart_toStartOf="@+id/selfieLabelTv2"
-            android:layout_marginTop="16dp"
-            app:layout_constraintTop_toBottomOf="@+id/selfieLabelTv2"/>
-    <Button
-            android:text="Loading..."
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/zippyBtn"
-            app:layout_constraintStart_toStartOf="parent"
-            android:layout_marginStart="8dp" app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="8dp"
-            app:layout_constraintHorizontal_bias="0.571" android:layout_marginBottom="32dp"
-            app:layout_constraintBottom_toBottomOf="parent"/>
+            android:layout_height="25dp"
+            android:text="Preparing:"
+            android:textSize="17sp"
+            android:textColor="@android:color/black"
+            android:layout_marginTop="50dp" android:layout_marginStart="50dp" android:layout_marginEnd="50dp"
+            app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" />
     <TextView
             android:text="OK"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="25dp"
             android:id="@+id/preparingOkLabelTv" app:layout_constraintStart_toEndOf="@+id/preparingLabelTv"
             android:layout_marginStart="16dp"
-            android:textSize="20sp"
+            android:textSize="17sp"
+            android:textColor="@android:color/black"
             android:visibility="invisible"
             app:layout_constraintBaseline_toBaselineOf="@+id/preparingLabelTv"/>
+
+
+    <TextView
+            android:id="@+id/faceLabelTv"
+            android:layout_width="wrap_content"
+            android:layout_height="25dp"
+            android:text="Face:"
+            android:textSize="17sp"
+            android:textColor="@android:color/black"
+            android:layout_marginTop="20dp"
+            app:layout_constraintStart_toStartOf="@+id/preparingLabelTv"
+            app:layout_constraintTop_toBottomOf="@+id/preparingLabelTv"/>
     <TextView
             android:text="OK"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/faceOkLabelTv" app:layout_constraintStart_toEndOf="@+id/selfieLabelTv"
+            android:layout_height="25dp"
+            android:id="@+id/faceOkLabelTv" app:layout_constraintStart_toEndOf="@+id/faceLabelTv"
             android:layout_marginStart="16dp"
-            android:textSize="20sp"
+            android:textSize="17sp"
+            android:textColor="@android:color/black"
             android:visibility="invisible"
-            app:layout_constraintBaseline_toBaselineOf="@+id/selfieLabelTv"/>
+            app:layout_constraintBaseline_toBaselineOf="@+id/faceLabelTv"/>
+
+
+    <TextView
+            android:id="@+id/documentFrontLabelTv"
+            android:layout_width="wrap_content"
+            android:layout_height="25dp"
+            android:text="Document front:"
+            android:textSize="17sp"
+            android:textColor="@android:color/black"
+            android:layout_marginTop="20dp"
+            app:layout_constraintStart_toStartOf="@+id/faceLabelTv"
+            app:layout_constraintTop_toBottomOf="@+id/faceLabelTv" />
     <TextView
             android:text="OK"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/docFrontOkLabelTv" app:layout_constraintStart_toEndOf="@+id/selfieLabelTv2"
+            android:layout_height="25dp"
+            android:id="@+id/docFrontOkLabelTv" app:layout_constraintStart_toEndOf="@+id/documentFrontLabelTv"
             android:layout_marginStart="16dp"
-            android:textSize="20sp"
+            android:textSize="17sp"
+            android:textColor="@android:color/black"
             android:visibility="invisible"
-            app:layout_constraintBaseline_toBaselineOf="@+id/selfieLabelTv2"/>
+            app:layout_constraintBaseline_toBaselineOf="@+id/documentFrontLabelTv"/>
+
+
+    <TextView
+            android:id="@+id/documentBackLabelTv"
+            android:layout_width="wrap_content"
+            android:layout_height="25dp"
+            android:text="Document back:"
+            android:textSize="17sp"
+            android:textColor="@android:color/black"
+            android:layout_marginTop="20dp"
+            app:layout_constraintStart_toStartOf="@+id/documentFrontLabelTv"
+            app:layout_constraintTop_toBottomOf="@+id/documentFrontLabelTv"/>
     <TextView
             android:text="OK"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/docBackOkLabelTv" app:layout_constraintStart_toEndOf="@+id/selfieLabelTv3"
+            android:layout_height="25dp"
+            android:id="@+id/docBackOkLabelTv" app:layout_constraintStart_toEndOf="@+id/documentBackLabelTv"
             android:layout_marginStart="16dp"
-            android:textSize="20sp"
+            android:textSize="17sp"
+            android:textColor="@android:color/black"
             android:visibility="invisible"
-            app:layout_constraintBaseline_toBaselineOf="@+id/selfieLabelTv3"/>
+            app:layout_constraintBaseline_toBaselineOf="@+id/documentBackLabelTv"/>
+
+
+    <TextView
+            android:id="@+id/sendingLabelTv"
+            android:layout_width="wrap_content"
+            android:layout_height="25dp"
+            android:text="Sending:"
+            android:textSize="17sp"
+            android:textColor="@android:color/black"
+            android:layout_marginTop="20dp"
+            app:layout_constraintStart_toStartOf="@+id/documentBackLabelTv"
+            app:layout_constraintTop_toBottomOf="@+id/documentBackLabelTv"/>
+    <TextView
+            android:text="OK"
+            android:layout_width="wrap_content"
+            android:layout_height="25dp"
+            android:id="@+id/sendingOkLabelTv" app:layout_constraintStart_toEndOf="@+id/sendingLabelTv"
+            android:layout_marginStart="16dp"
+            android:textSize="17sp"
+            android:textColor="@android:color/black"
+            android:visibility="invisible"
+            app:layout_constraintBaseline_toBaselineOf="@+id/sendingLabelTv"/>
+
+
+    <TextView
+            android:id="@+id/processingLabelTv"
+            android:layout_width="wrap_content"
+            android:layout_height="25dp"
+            android:text="Processing:"
+            android:textSize="17sp"
+            android:textColor="@android:color/black"
+            android:layout_marginTop="20dp"
+            app:layout_constraintStart_toStartOf="@+id/sendingLabelTv"
+            app:layout_constraintTop_toBottomOf="@+id/sendingLabelTv"/>
+    <TextView
+            android:text="OK"
+            android:layout_width="wrap_content"
+            android:layout_height="25dp"
+            android:id="@+id/processingOkLabelTv" app:layout_constraintStart_toEndOf="@+id/processingLabelTv"
+            android:layout_marginStart="16dp"
+            android:textSize="17sp"
+            android:textColor="@android:color/black"
+            android:visibility="invisible"
+            app:layout_constraintBaseline_toBaselineOf="@+id/processingLabelTv"/>
+
+
+    <Button
+            android:id="@+id/zippyBtn"
+            android:layout_height="50dp"
+            android:layout_width="match_parent"
+            android:text="Preparing..."
+            android:textColor="@android:color/white"
+            android:textAllCaps="false"
+            android:background="@drawable/custom_button"
+            android:layout_marginTop="40dp" android:layout_marginStart="50dp" android:layout_marginEnd="50dp"
+            app:layout_constraintStart_toStartOf="@+id/processingLabelTv" app:layout_constraintTop_toBottomOf="@+id/processingLabelTv" />
+    <TextView
+            android:id="@+id/helpLabelTv"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Need help with picture? Check out Picture example"
+            android:textSize="13sp"
+            android:textColor="@android:color/darker_gray"
+            android:layout_marginTop="10dp" android:layout_marginStart="55dp" android:layout_marginEnd="55dp"
+            app:layout_constraintTop_toBottomOf="@+id/zippyBtn"/>
+
 
 </android.support.constraint.ConstraintLayout>
