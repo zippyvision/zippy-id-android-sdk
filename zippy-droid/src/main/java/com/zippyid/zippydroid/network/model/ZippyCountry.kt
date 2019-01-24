@@ -1,5 +1,6 @@
 package com.zippyid.zippydroid.network.model
 import com.google.gson.annotations.SerializedName
+import java.io.Serializable
 
 data class Country(
     @SerializedName("value")
@@ -15,4 +16,4 @@ data class DocumentType(
     val value: String?,
     @SerializedName("label")
     val label: String?
-)
+) : Serializable

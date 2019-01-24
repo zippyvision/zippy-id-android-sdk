@@ -150,7 +150,6 @@ class CameraFragment : Fragment() {
      */
     private var imageReader: ImageReader? = null
 
-
     private val mSurfaceTextureListener = object : TextureView.SurfaceTextureListener {
         override fun onSurfaceTextureAvailable(texture: SurfaceTexture, width: Int, height: Int) {
             openCamera(width, height)
@@ -341,7 +340,17 @@ class CameraFragment : Fragment() {
             requestCameraPermission()
             return
         }
-        setUpCameraOutputs(width, height)
+
+        arguments = getArguments()
+
+        if (arguments?.getString("mode") != null) {
+            cameraId = arguments!!.getString("mode")
+            setUpCameraOutputs(width, height, arguments!!.getString("mode"))
+        } else {
+            cameraId = "0"
+            setUpCameraOutputs(width, height, "0")
+        }
+
         configureTransform(width, height)
         val manager = activity?.getSystemService(Context.CAMERA_SERVICE) as CameraManager
         try {
@@ -383,102 +392,99 @@ class CameraFragment : Fragment() {
         textureView.setTransform(matrix)
     }
 
-    private fun setUpCameraOutputs(width: Int, height: Int) {
+    private fun setUpCameraOutputs(width: Int, height: Int, cameraModeId: String?) {
         val manager = activity?.getSystemService(Context.CAMERA_SERVICE) as CameraManager
 
         try {
-            for (cameraId in manager.cameraIdList) {
-                val characteristics = manager.getCameraCharacteristics(cameraId)
+            val characteristics = manager.getCameraCharacteristics(cameraModeId)
 
-                // We don't use a front facing camera in this sample.
-                val facing = characteristics.get(CameraCharacteristics.LENS_FACING)
-                if (facing != null && facing == CameraCharacteristics.LENS_FACING_FRONT) {
-                    continue
-                }
-
-                val map = characteristics.get(
-                    CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP
-                ) ?: continue
-
-                // For still image captures, we use the largest available size.
-                val largest = Collections.max(
-                    Arrays.asList(*map.getOutputSizes(ImageFormat.JPEG)),
-                    CompareSizesByArea()
-                )
-                imageReader = ImageReader.newInstance(
-                    largest.width, largest.height,
-                    ImageFormat.JPEG, /*maxImages*/2
-                )
-                imageReader!!.setOnImageAvailableListener(
-                    mOnImageAvailableListener, backgroundHandler
-                )
-
-                // Find out if we need to swap dimension to get the preview size relative to sensor
-                // coordinate.
-                val displayRotation = activity?.getWindowManager()?.getDefaultDisplay()?.getRotation()
-
-                sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)!!
-                var swappedDimensions = false
-                when (displayRotation) {
-                    Surface.ROTATION_0, Surface.ROTATION_180 -> if (sensorOrientation == 90 || sensorOrientation == 270) {
-                        swappedDimensions = true
-                    }
-                    Surface.ROTATION_90, Surface.ROTATION_270 -> if (sensorOrientation == 0 || sensorOrientation == 180) {
-                        swappedDimensions = true
-                    }
-                    else -> Log.e(TAG, "Display rotation is invalid: $displayRotation")
-                }
-
-                val displaySize = Point()
-                activity?.getWindowManager()?.getDefaultDisplay()?.getSize(displaySize)
-                var rotatedPreviewWidth = width
-                var rotatedPreviewHeight = height
-                var maxPreviewWidth = displaySize.x
-                var maxPreviewHeight = displaySize.y
-
-                if (swappedDimensions) {
-                    rotatedPreviewWidth = height
-                    rotatedPreviewHeight = width
-                    maxPreviewWidth = displaySize.y
-                    maxPreviewHeight = displaySize.x
-                }
-
-                if (maxPreviewWidth > MAX_PREVIEW_WIDTH) {
-                    maxPreviewWidth = MAX_PREVIEW_WIDTH
-                }
-
-                if (maxPreviewHeight > MAX_PREVIEW_HEIGHT) {
-                    maxPreviewHeight = MAX_PREVIEW_HEIGHT
-                }
-
-                // Danger, W.R.! Attempting to use too large a preview size could  exceed the camera
-                // bus' bandwidth limitation, resulting in gorgeous previews but the storage of
-                // garbage capture data.
-                previewSize = chooseOptimalSize(
-                    map.getOutputSizes(SurfaceTexture::class.java),
-                    rotatedPreviewWidth, rotatedPreviewHeight, maxPreviewWidth,
-                    maxPreviewHeight, largest
-                )
-//
-                // We fit the aspect ratio of TextureView to the size of preview we picked.
-                val orientation = resources.configuration.orientation
-                if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                    textureView.setAspectRatio(
-                        previewSize!!.getWidth(), previewSize!!.getHeight()
-                    )
-                } else {
-                    textureView.setAspectRatio(
-                        previewSize!!.getHeight(), previewSize!!.getWidth()
-                    )
-                }
-
-                // Check if the flash is supported.
-                val available = characteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE)
-                flashSupported = available ?: false
-
-                this.cameraId = cameraId
-                return
+            // We don't use a front facing camera in this sample.
+            val facing = characteristics.get(CameraCharacteristics.LENS_FACING)
+            if (facing != null && facing == CameraCharacteristics.LENS_FACING_FRONT) {
+                //
             }
+
+            val map = characteristics.get(
+                CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP
+            )
+
+            // For still image captures, we use the largest available size.
+            val largest = Collections.max(
+                Arrays.asList(*map.getOutputSizes(ImageFormat.JPEG)),
+                CompareSizesByArea()
+            )
+            imageReader = ImageReader.newInstance(
+                largest.width, largest.height,
+                ImageFormat.JPEG, /*maxImages*/2
+            )
+            imageReader!!.setOnImageAvailableListener(
+                mOnImageAvailableListener, backgroundHandler
+            )
+
+            // Find out if we need to swap dimension to get the preview size relative to sensor
+            // coordinate.
+            val displayRotation = activity?.getWindowManager()?.getDefaultDisplay()?.getRotation()
+
+            sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)!!
+            var swappedDimensions = false
+            when (displayRotation) {
+                Surface.ROTATION_0, Surface.ROTATION_180 -> if (sensorOrientation == 90 || sensorOrientation == 270) {
+                    swappedDimensions = true
+                }
+                Surface.ROTATION_90, Surface.ROTATION_270 -> if (sensorOrientation == 0 || sensorOrientation == 180) {
+                    swappedDimensions = true
+                }
+                else -> Log.e(TAG, "Display rotation is invalid: $displayRotation")
+            }
+
+            val displaySize = Point()
+            activity?.getWindowManager()?.getDefaultDisplay()?.getSize(displaySize)
+            var rotatedPreviewWidth = width
+            var rotatedPreviewHeight = height
+            var maxPreviewWidth = displaySize.x
+            var maxPreviewHeight = displaySize.y
+
+            if (swappedDimensions) {
+                rotatedPreviewWidth = height
+                rotatedPreviewHeight = width
+                maxPreviewWidth = displaySize.y
+                maxPreviewHeight = displaySize.x
+            }
+
+            if (maxPreviewWidth > MAX_PREVIEW_WIDTH) {
+                maxPreviewWidth = MAX_PREVIEW_WIDTH
+            }
+
+            if (maxPreviewHeight > MAX_PREVIEW_HEIGHT) {
+                maxPreviewHeight = MAX_PREVIEW_HEIGHT
+            }
+
+            // Danger, W.R.! Attempting to use too large a preview size could  exceed the camera
+            // bus' bandwidth limitation, resulting in gorgeous previews but the storage of
+            // garbage capture data.
+            previewSize = chooseOptimalSize(
+                map.getOutputSizes(SurfaceTexture::class.java),
+                rotatedPreviewWidth, rotatedPreviewHeight, maxPreviewWidth,
+                maxPreviewHeight, largest
+            )
+
+            // We fit the aspect ratio of TextureView to the size of preview we picked.
+            val orientation = resources.configuration.orientation
+            if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                textureView.setAspectRatio(
+                    previewSize!!.getWidth(), previewSize!!.getHeight()
+                )
+            } else {
+                textureView.setAspectRatio(
+                    previewSize!!.getHeight(), previewSize!!.getWidth()
+                )
+            }
+
+            // Check if the flash is supported.
+            val available = characteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE)
+            flashSupported = available ?: false
+
+            return
         } catch (e: CameraAccessException) {
             e.printStackTrace()
         } catch (e: NullPointerException) {

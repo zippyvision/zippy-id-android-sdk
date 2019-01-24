@@ -52,7 +52,7 @@ class IDVertificationFragment : Fragment() {
         }
 
         continueBtn.setOnClickListener {
-            (activity as? ZippyActivity)?.onIDVertificationNextStep()
+            (activity as? ZippyActivity)?.onIDVertificationNextStep(selectedDocumentType)
         }
     }
 

@@ -11,6 +11,7 @@ import com.zippyid.zippydroid.camera.CameraFragment
 import com.zippyid.zippydroid.extension.toEncodedResizedPng
 import com.zippyid.zippydroid.network.ApiClient
 import com.zippyid.zippydroid.network.AsyncResponse
+import com.zippyid.zippydroid.network.model.DocumentType
 import com.zippyid.zippydroid.network.model.SuccessResponse
 import com.zippyid.zippydroid.wizard.IDVertificationFragment
 import com.zippyid.zippydroid.wizard.WizardFragment
@@ -33,6 +34,7 @@ class ZippyActivity : AppCompatActivity() {
     private var encodedDocumentFrontImage: String? = null
     private var encodedDocumentBackImage: String? = null
     var state = ZippyState.LOADING
+    lateinit var documentType: DocumentType
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,8 +43,13 @@ class ZippyActivity : AppCompatActivity() {
         switchToIDVertification()
     }
 
-    fun onWizardNextStep() {
-        switchToCamera()
+    fun onWizardNextStep(mode: String) {
+        switchToCamera(mode)
+    }
+
+    fun onIDVertificationNextStep(documentType: DocumentType) {
+        this.documentType = documentType
+        switchToWizard(documentType)
     }
 
     fun onCaptureCompleted(image: Image, imageOrientation: Int) {
@@ -50,17 +57,21 @@ class ZippyActivity : AppCompatActivity() {
             ZippyState.READY -> {
                 encodedFaceImage = image.toEncodedResizedPng(imageOrientation)
                 state = ZippyState.FACE_TAKEN
-                switchToWizard()
+                switchToWizard(documentType)
             }
             ZippyState.FACE_TAKEN -> {
                 encodedDocumentFrontImage = image.toEncodedResizedPng(imageOrientation)
-                state = ZippyState.DOC_FRONT_TAKEN
-                switchToWizard()
+                if (documentType.value == "passport") {
+                    state = ZippyState.READY_TO_SEND
+                } else {
+                    state = ZippyState.DOC_FRONT_TAKEN
+                }
+                switchToWizard(documentType)
             }
             ZippyState.DOC_FRONT_TAKEN -> {
                 encodedDocumentBackImage = image.toEncodedResizedPng(imageOrientation)
                 state = ZippyState.READY_TO_SEND
-                switchToWizard()
+                switchToWizard(documentType)
             }
             else -> throw IllegalStateException("Unknown state after capture! Crashing...")
         }
@@ -86,17 +97,22 @@ class ZippyActivity : AppCompatActivity() {
         finish()
     }
 
-    fun switchToCamera() {
-        supportFragmentManager.beginTransaction().replace(R.id.fragment_container_fl, CameraFragment()).commit()
+    private fun switchToCamera(mode: String) {
+        val cameraFragment = CameraFragment()
+        val arguments = Bundle()
+        arguments.putString("mode", mode)
+        cameraFragment.setArguments(arguments)
+
+        supportFragmentManager.beginTransaction().replace(R.id.fragment_container_fl, cameraFragment).commit()
         Log.d("ZIPPY", "Switched to camera!")
     }
 
-    fun switchToWizard() {
-        supportFragmentManager.beginTransaction().replace(R.id.fragment_container_fl, WizardFragment.newInstance(state)).commit()
+    private fun switchToWizard(documentType: DocumentType) {
+        supportFragmentManager.beginTransaction().replace(R.id.fragment_container_fl, WizardFragment.newInstance(state, documentType)).commit()
         Log.d("ZIPPY", "Switched to wizard!")
     }
 
-    fun switchToIDVertification() {
+    private fun switchToIDVertification() {
         supportFragmentManager.beginTransaction().replace(R.id.fragment_container_fl, IDVertificationFragment()).commit()
         Log.d("ZIPPY", "Switched to ID vertification!")
     }
