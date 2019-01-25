@@ -81,13 +81,12 @@ class ApiClient(private val secret: String, private val key: String, private val
     fun getResult(context: Context, customerUid: String, asyncResponse: AsyncResponse<SuccessResponse?>) {
         val queue = Volley.newRequestQueue(context)
 
-        val uri = "$baseUrl&/v1/$RESULT?customer_uid=$customerUid&secret_key=$secret&api_key=$key"
+        val uri = "$baseUrl/v1/$RESULT?customer_uid=$customerUid&secret_key=$secret&api_key=$key"
 
         val request = StringRequest(Request.Method.GET, uri,
             Response.Listener<String> {
                 val listType = object : TypeToken<List<SuccessResponse>>() {}.type
                 val successResponseList = gson.fromJson<List<SuccessResponse>>(it, listType)
-                Log.e(TAG, "Wow! Result!")
                 Log.d(TAG, it)
                 asyncResponse.onSuccess(successResponseList.firstOrNull())
             }, Response.ErrorListener {
