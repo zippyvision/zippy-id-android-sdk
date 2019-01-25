@@ -9,7 +9,6 @@ import android.content.res.Configuration
 import android.graphics.*
 import android.hardware.camera2.*
 import android.media.ImageReader
-import android.opengl.Visibility
 import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
@@ -150,6 +149,7 @@ class CameraFragment : Fragment() {
      * An [ImageReader] that handles still image capture.
      */
     private var imageReader: ImageReader? = null
+
 
     private val mSurfaceTextureListener = object : TextureView.SurfaceTextureListener {
         override fun onSurfaceTextureAvailable(texture: SurfaceTexture, width: Int, height: Int) {
@@ -307,6 +307,7 @@ class CameraFragment : Fragment() {
     override fun onStop() {
         super.onStop()
         stopBackgroundThread()
+        closeCamera()
     }
 
     /**
@@ -333,6 +334,8 @@ class CameraFragment : Fragment() {
     }
 
     private fun openCamera(width: Int, height: Int) {
+        val manager = activity?.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+
         if (ContextCompat.checkSelfPermission(
                 context!!,
                 Manifest.permission.CAMERA
@@ -345,23 +348,22 @@ class CameraFragment : Fragment() {
         arguments = getArguments()
 
         if (arguments?.getString("mode") == "face") {
-            cameraId = "1"
-            setUpCameraOutputs(width, height, "1")
+            this.cameraId = "1"
+            setUpCameraOutputs(width, height, "1", manager)
             setFrame(View.VISIBLE, View.INVISIBLE, View.INVISIBLE)
         } else if (arguments?.getString("mode") == "document_front") {
             // TODO: fix error "can't support to open 0 and 1 camera simultaneously!"
-            cameraId = "0"
-            setUpCameraOutputs(width, height, "0")
+            this.cameraId = "0"
+            setUpCameraOutputs(width, height, "0", manager)
             setFrame(View.INVISIBLE, View.VISIBLE, View.INVISIBLE)
         } else if (arguments?.getString("mode") == "document_back") {
             // TODO: fix error "can't support to open 0 and 1 camera simultaneously!"
-            cameraId = "0"
-            setUpCameraOutputs(width, height, "0")
+            this.cameraId = "0"
+            setUpCameraOutputs(width, height, "0", manager)
             setFrame(View.INVISIBLE, View.INVISIBLE, View.VISIBLE)
         }
 
         configureTransform(width, height)
-        val manager = activity?.getSystemService(Context.CAMERA_SERVICE) as CameraManager
         try {
             if (!cameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)) {
                 throw RuntimeException("Time out waiting to lock camera opening.")
@@ -371,6 +373,28 @@ class CameraFragment : Fragment() {
             e.printStackTrace()
         } catch (e: InterruptedException) {
             throw RuntimeException("Interrupted while trying to lock camera opening.", e)
+        }
+    }
+
+    private fun closeCamera() {
+        try {
+            cameraOpenCloseLock.acquire();
+            if (null != captureSession) {
+                captureSession?.close();
+                captureSession = null;
+            }
+            if (null != cameraDevice) {
+                cameraDevice?.close();
+                cameraDevice = null;
+            }
+            if (null != imageReader) {
+                imageReader?.close();
+                imageReader = null;
+            }
+        } catch (e: InterruptedException) {
+            throw RuntimeException("Interrupted while trying to lock camera closing.", e);
+        } finally {
+            cameraOpenCloseLock.release();
         }
     }
 
@@ -407,99 +431,101 @@ class CameraFragment : Fragment() {
         textureView.setTransform(matrix)
     }
 
-    private fun setUpCameraOutputs(width: Int, height: Int, cameraModeId: String?) {
-        val manager = activity?.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+    private fun setUpCameraOutputs(width: Int, height: Int, cameraModeId: String, manager: CameraManager) {
 
         try {
-            val characteristics = manager.getCameraCharacteristics(cameraModeId)
+            for (cameraId in manager.cameraIdList) {
+                val characteristics = manager.getCameraCharacteristics(cameraId)
 
-            // We don't use a front facing camera in this sample.
-            val facing = characteristics.get(CameraCharacteristics.LENS_FACING)
-            if (facing != null && facing == CameraCharacteristics.LENS_FACING_FRONT) {
-                //
-            }
-
-            val map = characteristics.get(
-                CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP
-            )
-
-            // For still image captures, we use the largest available size.
-            val largest = Collections.max(
-                Arrays.asList(*map.getOutputSizes(ImageFormat.JPEG)),
-                CompareSizesByArea()
-            )
-            imageReader = ImageReader.newInstance(
-                largest.width, largest.height,
-                ImageFormat.JPEG, /*maxImages*/2
-            )
-            imageReader!!.setOnImageAvailableListener(
-                mOnImageAvailableListener, backgroundHandler
-            )
-
-            // Find out if we need to swap dimension to get the preview size relative to sensor
-            // coordinate.
-            val displayRotation = activity?.getWindowManager()?.getDefaultDisplay()?.getRotation()
-
-            sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)!!
-            var swappedDimensions = false
-            when (displayRotation) {
-                Surface.ROTATION_0, Surface.ROTATION_180 -> if (sensorOrientation == 90 || sensorOrientation == 270) {
-                    swappedDimensions = true
+                // We don't use a front facing camera in this sample.
+                val facing = characteristics.get(CameraCharacteristics.LENS_FACING)
+                if (facing != null && facing == CameraCharacteristics.LENS_FACING_FRONT) {
+                    continue
                 }
-                Surface.ROTATION_90, Surface.ROTATION_270 -> if (sensorOrientation == 0 || sensorOrientation == 180) {
-                    swappedDimensions = true
+
+                val map = characteristics.get(
+                    CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP
+                ) ?: continue
+
+                // For still image captures, we use the largest available size.
+                val largest = Collections.max(
+                    Arrays.asList(*map.getOutputSizes(ImageFormat.JPEG)),
+                    CompareSizesByArea()
+                )
+                imageReader = ImageReader.newInstance(
+                    largest.width, largest.height,
+                    ImageFormat.JPEG, /*maxImages*/2
+                )
+                imageReader!!.setOnImageAvailableListener(
+                    mOnImageAvailableListener, backgroundHandler
+                )
+
+                // Find out if we need to swap dimension to get the preview size relative to sensor
+                // coordinate.
+                val displayRotation = activity?.getWindowManager()?.getDefaultDisplay()?.getRotation()
+
+                sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)!!
+                var swappedDimensions = false
+                when (displayRotation) {
+                    Surface.ROTATION_0, Surface.ROTATION_180 -> if (sensorOrientation == 90 || sensorOrientation == 270) {
+                        swappedDimensions = true
+                    }
+                    Surface.ROTATION_90, Surface.ROTATION_270 -> if (sensorOrientation == 0 || sensorOrientation == 180) {
+                        swappedDimensions = true
+                    }
+                    else -> Log.e(TAG, "Display rotation is invalid: $displayRotation")
                 }
-                else -> Log.e(TAG, "Display rotation is invalid: $displayRotation")
-            }
 
-            val displaySize = Point()
-            activity?.getWindowManager()?.getDefaultDisplay()?.getSize(displaySize)
-            var rotatedPreviewWidth = width
-            var rotatedPreviewHeight = height
-            var maxPreviewWidth = displaySize.x
-            var maxPreviewHeight = displaySize.y
+                val displaySize = Point()
+                activity?.getWindowManager()?.getDefaultDisplay()?.getSize(displaySize)
+                var rotatedPreviewWidth = width
+                var rotatedPreviewHeight = height
+                var maxPreviewWidth = displaySize.x
+                var maxPreviewHeight = displaySize.y
 
-            if (swappedDimensions) {
-                rotatedPreviewWidth = height
-                rotatedPreviewHeight = width
-                maxPreviewWidth = displaySize.y
-                maxPreviewHeight = displaySize.x
-            }
+                if (swappedDimensions) {
+                    rotatedPreviewWidth = height
+                    rotatedPreviewHeight = width
+                    maxPreviewWidth = displaySize.y
+                    maxPreviewHeight = displaySize.x
+                }
 
-            if (maxPreviewWidth > MAX_PREVIEW_WIDTH) {
-                maxPreviewWidth = MAX_PREVIEW_WIDTH
-            }
+                if (maxPreviewWidth > MAX_PREVIEW_WIDTH) {
+                    maxPreviewWidth = MAX_PREVIEW_WIDTH
+                }
 
-            if (maxPreviewHeight > MAX_PREVIEW_HEIGHT) {
-                maxPreviewHeight = MAX_PREVIEW_HEIGHT
-            }
+                if (maxPreviewHeight > MAX_PREVIEW_HEIGHT) {
+                    maxPreviewHeight = MAX_PREVIEW_HEIGHT
+                }
 
-            // Danger, W.R.! Attempting to use too large a preview size could  exceed the camera
-            // bus' bandwidth limitation, resulting in gorgeous previews but the storage of
-            // garbage capture data.
-            previewSize = chooseOptimalSize(
-                map.getOutputSizes(SurfaceTexture::class.java),
-                rotatedPreviewWidth, rotatedPreviewHeight, maxPreviewWidth,
-                maxPreviewHeight, largest
-            )
-
-            // We fit the aspect ratio of TextureView to the size of preview we picked.
-            val orientation = resources.configuration.orientation
-            if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                textureView.setAspectRatio(
-                    previewSize!!.getWidth(), previewSize!!.getHeight()
+                // Danger, W.R.! Attempting to use too large a preview size could  exceed the camera
+                // bus' bandwidth limitation, resulting in gorgeous previews but the storage of
+                // garbage capture data.
+                previewSize = chooseOptimalSize(
+                    map.getOutputSizes(SurfaceTexture::class.java),
+                    rotatedPreviewWidth, rotatedPreviewHeight, maxPreviewWidth,
+                    maxPreviewHeight, largest
                 )
-            } else {
-                textureView.setAspectRatio(
-                    previewSize!!.getHeight(), previewSize!!.getWidth()
-                )
+//
+                // We fit the aspect ratio of TextureView to the size of preview we picked.
+                val orientation = resources.configuration.orientation
+                if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                    textureView.setAspectRatio(
+                        previewSize!!.getWidth(), previewSize!!.getHeight()
+                    )
+                } else {
+                    textureView.setAspectRatio(
+                        previewSize!!.getHeight(), previewSize!!.getWidth()
+                    )
+                }
+
+                // Check if the flash is supported.
+                val available = characteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE)
+                flashSupported = available ?: false
+
+                this.cameraId = cameraModeId
+                return
             }
-
-            // Check if the flash is supported.
-            val available = characteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE)
-            flashSupported = available ?: false
-
-            return
         } catch (e: CameraAccessException) {
             e.printStackTrace()
         } catch (e: NullPointerException) {
