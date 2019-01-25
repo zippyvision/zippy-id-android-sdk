@@ -26,8 +26,11 @@ class IDVertificationFragment : Fragment() {
     lateinit var selectedCountry: Country
     lateinit var selectedDocumentType: DocumentType
 
-    private var executeOnCountrySelected = true
-    private var executeOnDocumentTypeSelected = true
+    lateinit var countryAdapter: ArrayAdapter<String>
+    lateinit var documentAdapter: ArrayAdapter<String>
+
+    private lateinit var countrySpinnerOnItemSelectedListener: AdapterView.OnItemSelectedListener
+    private lateinit var documentTypeSpinnerOnItemSelectedListener: AdapterView.OnItemSelectedListener
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_id_vertification, container, false)
@@ -35,6 +38,11 @@ class IDVertificationFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        countryAdapter = ArrayAdapter(activity, android.R.layout.simple_spinner_dropdown_item)
+        documentAdapter = ArrayAdapter(activity, android.R.layout.simple_spinner_dropdown_item)
+
+        countrySpinner.adapter = countryAdapter
+        documentSpinner.adapter = documentAdapter
 
         context?.let {
             apiClient.getCountries(it, object : AsyncResponse<List<Country>> {
@@ -42,8 +50,12 @@ class IDVertificationFragment : Fragment() {
                     countries = response
                     selectedCountry = response.first()
                     selectedDocumentType = selectedCountry.documentTypes!!.first()
-                    setupCountrySpinner()
-                    setupDocumentSpinner()
+
+                    countryAdapter.addAll(countries.map { it.label })
+                    documentAdapter.addAll(selectedCountry.documentTypes!!.map { it.label })
+
+                    countrySpinner.onItemSelectedListener = countrySpinnerOnItemSelectedListener
+                    documentSpinner.onItemSelectedListener = documentTypeSpinnerOnItemSelectedListener
                 }
                 override fun onError(error: VolleyError) {
                     Log.e("error", error.toString())
@@ -54,43 +66,29 @@ class IDVertificationFragment : Fragment() {
         continueBtn.setOnClickListener {
             (activity as? ZippyActivity)?.onIDVertificationNextStep(selectedDocumentType)
         }
-    }
 
-    private fun setupCountrySpinner() {
-        // TODO: fix
-        if (executeOnCountrySelected) {
-            var availableCountries = countries.filter { country -> country.documentTypes!!.contains(selectedDocumentType) }
-            countrySpinner.adapter = ArrayAdapter(activity, R.layout.support_simple_spinner_dropdown_item, availableCountries.map { it.label })
-            countrySpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-                override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                        executeOnCountrySelected = false
-                        selectedCountry = availableCountries[position]
-                        setupDocumentSpinner()
-                }
-                override fun onNothingSelected(parent: AdapterView<*>?) { }
+        countrySpinnerOnItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                selectedCountry = countries[position]
+                documentSpinner.setSelection(0, false)
+                selectedDocumentType = selectedCountry.documentTypes!!.first()
+                documentAdapter.clear()
+                documentAdapter.addAll(selectedCountry.documentTypes!!.map { it.label })
             }
-        } else {
-            executeOnCountrySelected = true
-            executeOnDocumentTypeSelected = true
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                Log.d("country spinner", "nothing selected")
+            }
         }
-    }
 
-    private fun setupDocumentSpinner() {
-        // TODO: fix
-        if (executeOnDocumentTypeSelected) {
-            var availableDocumentTypes = selectedCountry.documentTypes
-            documentSpinner.adapter = ArrayAdapter(activity, R.layout.support_simple_spinner_dropdown_item, availableDocumentTypes!!.map { it.label })
-            documentSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-                override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                    executeOnDocumentTypeSelected = false
-                    selectedDocumentType = availableDocumentTypes!![position]
-                    setupCountrySpinner()
-                }
-                override fun onNothingSelected(parent: AdapterView<*>?) { }
+        documentTypeSpinnerOnItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                selectedDocumentType = selectedCountry.documentTypes!![position]
             }
-        } else {
-            executeOnDocumentTypeSelected = true
-            executeOnCountrySelected = true
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                Log.d("document spinner", "nothing selected")
+            }
         }
     }
 }
+
+
