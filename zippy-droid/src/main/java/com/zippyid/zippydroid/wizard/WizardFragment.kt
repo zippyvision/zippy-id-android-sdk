@@ -1,11 +1,15 @@
 package com.zippyid.zippydroid.wizard
 
+import android.graphics.Color
 import android.os.Bundle
 import android.support.v4.app.Fragment
+import android.text.Spannable
+import android.text.SpannableString
+import android.text.style.ForegroundColorSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
+import android.widget.TextView
 import com.android.volley.VolleyError
 import com.zippyid.zippydroid.R
 import com.zippyid.zippydroid.Zippy
@@ -52,6 +56,16 @@ class WizardFragment : Fragment() {
 
         adjustViews()
 
+        helpLabelTv.setOnClickListener{
+            zippyBtn.visibility = View.INVISIBLE
+            exampleIv.visibility = View.VISIBLE
+        }
+
+        exampleIv.setOnClickListener {
+            exampleIv.visibility = View.GONE
+            zippyBtn.visibility = View.VISIBLE
+        }
+
         processAccordingToState()
     }
 
@@ -60,6 +74,10 @@ class WizardFragment : Fragment() {
             documentBackLabelTv.visibility = View.GONE
             docBackOkLabelTv.setText("")
         }
+
+        var spannable = SpannableString("Need help with picture? Check out Picture example")
+        spannable.setSpan(ForegroundColorSpan(Color.parseColor("#FF8700")), "Need help with picture? ".length, "Need help with picture? Check out Picture example".length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        helpLabelTv.setText(spannable, TextView.BufferType.SPANNABLE)
     }
 
     private fun processAccordingToState() {
