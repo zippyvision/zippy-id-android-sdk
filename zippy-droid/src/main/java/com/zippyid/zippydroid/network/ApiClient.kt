@@ -49,14 +49,13 @@ class ApiClient(private val secret: String, private val key: String, private val
         queue.add(request)
     }
 
-    fun sendImages(context: Context, documentType: String, encodedFaceImage: String, encodedDocumentFront: String, encodedDocumentBack: String, customerUid: String, asyncResponse: AsyncResponse<SuccessResponse?>) {
+    fun sendImages(context: Context, documentType: String, encodedFaceImage: String, encodedDocumentFront: String, encodedDocumentBack: String?, customerUid: String, asyncResponse: AsyncResponse<SuccessResponse?>) {
         val queue = Volley.newRequestQueue(context)
 
         Log.e(TAG, "Trying to send images!")
 
         val request = object : StringRequest(Request.Method.POST, baseUrl + "/v1/" + VERIFICATION,
             Response.Listener<String> {
-                Log.e(TAG, "Wow! Done!")
                 Log.d(TAG, it)
                 getResult(context, customerUid, asyncResponse)
             }, Response.ErrorListener {
@@ -70,7 +69,11 @@ class ApiClient(private val secret: String, private val key: String, private val
                 params["document_type"] = documentType
                 params["image_data[selfie]"] = "data:image/png;base64,$encodedFaceImage"
                 params["image_data[idFront]"] = "data:image/png;base64,$encodedDocumentFront"
-                params["image_data[idBack]"] = "data:image/png;base64,$encodedDocumentBack"
+                if (encodedDocumentBack != null) {
+                    params["image_data[idBack]"] = "data:image/png;base64,$encodedDocumentBack"
+                } else {
+                    params["image_data[idBack]"] = ""
+                }
                 params["customer_uid"] = customerUid
                 return params
             }
@@ -106,7 +109,6 @@ class ApiClient(private val secret: String, private val key: String, private val
                 val listType = object : TypeToken<List<Country>>() {}.type
                 val countries = gson.fromJson<List<Country>>(it, listType)
                 asychResponse.onSuccess(countries)
-                Log.e(TAG, "Wow! Result!")
             }, Response.ErrorListener {
                 Log.e(TAG, "Error getting result!")
             })

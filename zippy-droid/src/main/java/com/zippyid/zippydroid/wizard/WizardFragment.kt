@@ -108,8 +108,20 @@ class WizardFragment : Fragment() {
                 docBackOkLabelTv.visibility = View.VISIBLE
                 zippyBtn.text = "Send info!"
                 zippyBtn.setOnClickListener {
-                    Toast.makeText(context!!, "Hey! Everything is done!", Toast.LENGTH_LONG).show()
                     (activity as ZippyActivity).sendImages(apiClient)
+                    sendingOkLabelTv.visibility = View.VISIBLE
+                }
+            }
+            ZippyActivity.ZippyState.DONE -> {
+                preparingOkLabelTv.visibility = View.VISIBLE
+                faceOkLabelTv.visibility = View.VISIBLE
+                docFrontOkLabelTv.visibility = View.VISIBLE
+                docBackOkLabelTv.visibility = View.VISIBLE
+                sendingOkLabelTv.visibility = View.VISIBLE
+                processingOkLabelTv.visibility = View.VISIBLE
+                zippyBtn.text = "Finish!"
+                zippyBtn.setOnClickListener {
+                    activity?.finish()
                 }
             }
         }

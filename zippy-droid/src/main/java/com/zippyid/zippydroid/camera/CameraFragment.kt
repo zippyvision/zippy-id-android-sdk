@@ -523,7 +523,12 @@ class CameraFragment : Fragment() {
                 val available = characteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE)
                 flashSupported = available ?: false
 
-                this.cameraId = cameraModeId
+                if (manager.cameraIdList.contains(cameraModeId)) {
+                    this.cameraId = cameraModeId
+                } else {
+                    this.cameraId = cameraId
+                }
+                
                 return
             }
         } catch (e: CameraAccessException) {

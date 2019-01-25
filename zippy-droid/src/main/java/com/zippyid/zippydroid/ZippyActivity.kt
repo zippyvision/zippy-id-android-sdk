@@ -27,7 +27,8 @@ class ZippyActivity : AppCompatActivity() {
         FACE_TAKEN,
         DOC_FRONT_TAKEN,
         DOC_BACK_TAKEN,
-        READY_TO_SEND
+        READY_TO_SEND,
+        DONE
     }
 
     private var encodedFaceImage: String? = null
@@ -78,7 +79,7 @@ class ZippyActivity : AppCompatActivity() {
     }
 
     fun sendImages(apiClient: ApiClient) {
-        apiClient.sendImages(this, "id_card", encodedFaceImage!!, encodedDocumentFrontImage!!, encodedDocumentBackImage!!, "123456", object : AsyncResponse<SuccessResponse?> {
+        apiClient.sendImages(this, "id_card", encodedFaceImage!!, encodedDocumentFrontImage!!, encodedDocumentBackImage, "123456", object : AsyncResponse<SuccessResponse?> {
             override fun onSuccess(response: SuccessResponse?) {
                 //TODO add proper response handling
                 finishAndSendResult(response?.state ?: "Couldn't handle response")
@@ -94,7 +95,8 @@ class ZippyActivity : AppCompatActivity() {
         val returnIntent = Intent()
         returnIntent.putExtra(ZippyActivity.ZIPPY_RESULT, message)
         setResult(Activity.RESULT_OK, returnIntent)
-        finish()
+        state = ZippyState.DONE
+        switchToWizard(documentType)
     }
 
     private fun switchToCamera(mode: String) {
