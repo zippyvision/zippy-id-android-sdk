@@ -31,6 +31,7 @@ class CameraFragment : Fragment() {
 
     companion object {
 
+        private const val CAMERA_MODE = "camera_mode"
         private const val REQUEST_CAMERA_PERMISSION = 1
         private const val FRAGMENT_DIALOG = "dialog"
         private val ORIENTATIONS = SparseIntArray()
@@ -40,6 +41,16 @@ class CameraFragment : Fragment() {
             ORIENTATIONS.append(Surface.ROTATION_90, 0)
             ORIENTATIONS.append(Surface.ROTATION_180, 270)
             ORIENTATIONS.append(Surface.ROTATION_270, 180)
+        }
+
+        fun newInstance(
+            mode: ZippyActivity.CameraMode
+        ): CameraFragment {
+            val bundle = Bundle()
+            bundle.putSerializable(CameraFragment.CAMERA_MODE, mode)
+            val fragment = CameraFragment()
+            fragment.arguments = bundle
+            return fragment
         }
     }
 
@@ -346,22 +357,21 @@ class CameraFragment : Fragment() {
         }
 
         arguments = getArguments()
+        val mode = arguments?.getSerializable(CameraFragment.CAMERA_MODE) as? ZippyActivity.CameraMode
+                ?: throw IllegalArgumentException("Mode was not passed to CameraFragment!")
 
-        if (arguments?.getString("mode") == "face") {
+        if (mode == ZippyActivity.CameraMode.FACE) {
             this.cameraId = "1"
-            setUpCameraOutputs(width, height, "1", manager)
-            setFrame(View.VISIBLE, View.INVISIBLE, View.INVISIBLE)
-        } else if (arguments?.getString("mode") == "document_front") {
-            // TODO: fix error "can't support to open 0 and 1 camera simultaneously!"
+            showFaceFrame()
+        } else if (mode == ZippyActivity.CameraMode.DOCUMENT_FRONT) {
             this.cameraId = "0"
-            setUpCameraOutputs(width, height, "0", manager)
-            setFrame(View.INVISIBLE, View.VISIBLE, View.INVISIBLE)
-        } else if (arguments?.getString("mode") == "document_back") {
-            // TODO: fix error "can't support to open 0 and 1 camera simultaneously!"
+            showDocumentFrontFrame()
+        } else if (mode == ZippyActivity.CameraMode.DOCUMENT_BACK) {
             this.cameraId = "0"
-            setUpCameraOutputs(width, height, "0", manager)
-            setFrame(View.INVISIBLE, View.INVISIBLE, View.VISIBLE)
+            showDocumentBackFrame()
         }
+
+        this.cameraId?.let { setUpCameraOutputs(width, height, it, manager) }
 
         configureTransform(width, height)
         try {
@@ -398,11 +408,24 @@ class CameraFragment : Fragment() {
         }
     }
 
-    private fun setFrame(faceFrame: Int, documentFrontFrame: Int, documentBackFrame: Int) {
-        faceFrameIv.visibility = faceFrame
-        documentFrontFrameIv.visibility = documentFrontFrame
-        documentBackFrameIv.visibility = documentBackFrame
+    private fun showFaceFrame() {
+        faceFrameIv.visibility = View.VISIBLE
+        documentFrontFrameIv.visibility = View.INVISIBLE
+        documentBackFrameIv.visibility = View.INVISIBLE
     }
+
+    private fun showDocumentFrontFrame() {
+        faceFrameIv.visibility = View.INVISIBLE
+        documentFrontFrameIv.visibility = View.VISIBLE
+        documentBackFrameIv.visibility = View.INVISIBLE
+    }
+
+    private fun showDocumentBackFrame() {
+        faceFrameIv.visibility = View.INVISIBLE
+        documentFrontFrameIv.visibility = View.INVISIBLE
+        documentBackFrameIv.visibility = View.VISIBLE
+    }
+
 
     private fun configureTransform(viewWidth: Int, viewHeight: Int) {
         if (null == textureView || null == previewSize) {
@@ -523,11 +546,8 @@ class CameraFragment : Fragment() {
                 val available = characteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE)
                 flashSupported = available ?: false
 
-                if (manager.cameraIdList.contains(cameraModeId)) {
-                    this.cameraId = cameraModeId
-                } else {
-                    this.cameraId = cameraId
-                }
+
+                this.cameraId = if(manager.cameraIdList.contains(cameraModeId)) cameraModeId else cameraId
                 
                 return
             }

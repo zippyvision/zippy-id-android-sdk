@@ -38,5 +38,5 @@ fun Image.toEncodedResizedPng(imageOrientation: Int): String {
 
     base64.replace("+", "%2b")
 
-    return base64
+    return "data:image/png;base64,$base64"
 }

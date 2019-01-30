@@ -20,8 +20,6 @@ import kotlinx.android.synthetic.main.fragment_id_vertification.*
 
 class IDVertificationFragment : Fragment() {
 
-    private val apiClient = ApiClient(Zippy.secret, Zippy.key, Zippy.host)
-
     lateinit var countries: List<Country>
     lateinit var selectedCountry: Country
     lateinit var selectedDocumentType: DocumentType
@@ -31,6 +29,7 @@ class IDVertificationFragment : Fragment() {
 
     private lateinit var countrySpinnerOnItemSelectedListener: AdapterView.OnItemSelectedListener
     private lateinit var documentTypeSpinnerOnItemSelectedListener: AdapterView.OnItemSelectedListener
+    private lateinit var apiClient: ApiClient
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_id_vertification, container, false)
@@ -38,30 +37,30 @@ class IDVertificationFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        apiClient = ApiClient(Zippy.secret, Zippy.key, Zippy.host, context!!)
         countryAdapter = ArrayAdapter(activity, android.R.layout.simple_spinner_dropdown_item)
         documentAdapter = ArrayAdapter(activity, android.R.layout.simple_spinner_dropdown_item)
 
         countrySpinner.adapter = countryAdapter
         documentSpinner.adapter = documentAdapter
 
-        context?.let {
-            apiClient.getCountries(it, object : AsyncResponse<List<Country>> {
-                override fun onSuccess(response: List<Country>) {
-                    countries = response
-                    selectedCountry = response.first()
-                    selectedDocumentType = selectedCountry.documentTypes!!.first()
+        apiClient.getCountries(object : AsyncResponse<List<Country>> {
+            override fun onSuccess(response: List<Country>) {
+                countries = response
+                selectedCountry = response.first()
+                selectedDocumentType = selectedCountry.documentTypes!!.first()
 
-                    countryAdapter.addAll(countries.map { it.label })
-                    documentAdapter.addAll(selectedCountry.documentTypes!!.map { it.label })
+                countryAdapter.addAll(countries.map { it.label })
+                documentAdapter.addAll(selectedCountry.documentTypes!!.map { it.label })
 
-                    countrySpinner.onItemSelectedListener = countrySpinnerOnItemSelectedListener
-                    documentSpinner.onItemSelectedListener = documentTypeSpinnerOnItemSelectedListener
-                }
-                override fun onError(error: VolleyError) {
-                    Log.e("error", error.toString())
-                }
-            })
-        }
+                countrySpinner.onItemSelectedListener = countrySpinnerOnItemSelectedListener
+                documentSpinner.onItemSelectedListener = documentTypeSpinnerOnItemSelectedListener
+            }
+            override fun onError(error: VolleyError) {
+                Log.e("error", error.toString())
+            }
+        })
+
 
         continueBtn.setOnClickListener {
             (activity as? ZippyActivity)?.onIDVertificationNextStep(selectedDocumentType)

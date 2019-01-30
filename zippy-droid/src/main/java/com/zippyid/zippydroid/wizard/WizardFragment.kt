@@ -37,10 +37,9 @@ class WizardFragment : Fragment() {
         }
     }
 
-    private val apiClient = ApiClient(Zippy.secret, Zippy.key, Zippy.host)
-
     private lateinit var state: ZippyActivity.ZippyState
     private lateinit var documentType: DocumentType
+    private lateinit var apiClient: ApiClient
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_wizard, container, false)
@@ -48,6 +47,7 @@ class WizardFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        apiClient = ApiClient(Zippy.secret, Zippy.key, Zippy.host, context!!)
 
         state = arguments?.getSerializable(ZIPPY_STATE) as? ZippyActivity.ZippyState
                 ?: throw IllegalArgumentException("State was not passed to WizardFragment!")
@@ -70,7 +70,7 @@ class WizardFragment : Fragment() {
     }
 
     private fun adjustViews() {
-        if (documentType.value == "passport") {
+        if (documentType.value == ZippyActivity.DocumentMode.PASSPORT.value) {
             documentBackLabelTv.visibility = View.GONE
             docBackOkLabelTv.setText("")
         }
@@ -83,7 +83,7 @@ class WizardFragment : Fragment() {
     private fun processAccordingToState() {
         when(state) {
             ZippyActivity.ZippyState.LOADING -> {
-                apiClient.getToken(context!!, object : AsyncResponse<String> {
+                apiClient.getToken(object : AsyncResponse<String> {
                     override fun onSuccess(response: String) {
                         (activity as? ZippyActivity)?.state = ZippyActivity.ZippyState.READY
                         state = ZippyActivity.ZippyState.READY
@@ -99,7 +99,7 @@ class WizardFragment : Fragment() {
                 preparingOkLabelTv?.visibility = View.VISIBLE
                 zippyBtn.text = "Take selfie"
                 zippyBtn.setOnClickListener {
-                    (activity as? ZippyActivity)?.onWizardNextStep("face")
+                    (activity as? ZippyActivity)?.onWizardNextStep(ZippyActivity.CameraMode.FACE)
                 }
             }
             ZippyActivity.ZippyState.FACE_TAKEN -> {
@@ -107,7 +107,7 @@ class WizardFragment : Fragment() {
                 faceOkLabelTv.visibility = View.VISIBLE
                 zippyBtn.text = "Take document front"
                 zippyBtn.setOnClickListener {
-                    (activity as? ZippyActivity)?.onWizardNextStep("document_front")
+                    (activity as? ZippyActivity)?.onWizardNextStep(ZippyActivity.CameraMode.DOCUMENT_FRONT)
                 }
             }
             ZippyActivity.ZippyState.DOC_FRONT_TAKEN -> {
@@ -116,7 +116,7 @@ class WizardFragment : Fragment() {
                 docFrontOkLabelTv.visibility = View.VISIBLE
                 zippyBtn.text = "Take document back"
                 zippyBtn.setOnClickListener {
-                    (activity as? ZippyActivity)?.onWizardNextStep("document_back")
+                    (activity as? ZippyActivity)?.onWizardNextStep(ZippyActivity.CameraMode.DOCUMENT_BACK)
                 }
             }
             ZippyActivity.ZippyState.READY_TO_SEND -> {
@@ -126,8 +126,9 @@ class WizardFragment : Fragment() {
                 docBackOkLabelTv.visibility = View.VISIBLE
                 zippyBtn.text = "Send info!"
                 zippyBtn.setOnClickListener {
-                    (activity as ZippyActivity).sendImages(apiClient)
+                    (activity as ZippyActivity).sendImages(apiClient, documentType)
                     sendingOkLabelTv.visibility = View.VISIBLE
+                    zippyBtn.text = "Processing..."
                 }
             }
             ZippyActivity.ZippyState.DONE -> {

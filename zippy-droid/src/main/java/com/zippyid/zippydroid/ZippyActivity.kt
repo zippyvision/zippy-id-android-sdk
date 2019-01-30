@@ -31,6 +31,18 @@ class ZippyActivity : AppCompatActivity() {
         DONE
     }
 
+    enum class DocumentMode(val value: String) {
+        PASSPORT("passport"),
+        ID_CARD("id_card"),
+        DRIVERS_LICENCE("drivers_licence")
+    }
+
+    enum class CameraMode {
+        FACE,
+        DOCUMENT_FRONT,
+        DOCUMENT_BACK
+    }
+
     private var encodedFaceImage: String? = null
     private var encodedDocumentFrontImage: String? = null
     private var encodedDocumentBackImage: String? = null
@@ -44,7 +56,7 @@ class ZippyActivity : AppCompatActivity() {
         switchToIDVertification()
     }
 
-    fun onWizardNextStep(mode: String) {
+    fun onWizardNextStep(mode: CameraMode) {
         switchToCamera(mode)
     }
 
@@ -62,11 +74,7 @@ class ZippyActivity : AppCompatActivity() {
             }
             ZippyState.FACE_TAKEN -> {
                 encodedDocumentFrontImage = image.toEncodedResizedPng(imageOrientation)
-                if (documentType.value == "passport") {
-                    state = ZippyState.READY_TO_SEND
-                } else {
-                    state = ZippyState.DOC_FRONT_TAKEN
-                }
+                state = if (documentType.value == DocumentMode.PASSPORT.value) ZippyState.READY_TO_SEND else ZippyState.DOC_FRONT_TAKEN
                 switchToWizard(documentType)
             }
             ZippyState.DOC_FRONT_TAKEN -> {
@@ -78,17 +86,21 @@ class ZippyActivity : AppCompatActivity() {
         }
     }
 
-    fun sendImages(apiClient: ApiClient) {
-        apiClient.sendImages(this, "id_card", encodedFaceImage!!, encodedDocumentFrontImage!!, encodedDocumentBackImage, "123456", object : AsyncResponse<SuccessResponse?> {
-            override fun onSuccess(response: SuccessResponse?) {
-                //TODO add proper response handling
-                finishAndSendResult(response?.state ?: "Couldn't handle response")
-            }
+    fun sendImages(apiClient: ApiClient, documentType: DocumentType) {
+        if (documentType.value == null || encodedFaceImage == null || encodedDocumentFrontImage == null) {
+            finishAndSendResult("Error! Missing data")
+        } else {
+            apiClient.sendImages(documentType.value!!, encodedFaceImage!!, encodedDocumentFrontImage!!, encodedDocumentBackImage, "123456", object : AsyncResponse<SuccessResponse?> {
+                override fun onSuccess(response: SuccessResponse?) {
+                    //TODO add proper response handling
+                    finishAndSendResult(response?.state ?: "Couldn't handle response")
+                }
 
-            override fun onError(error: VolleyError) {
-                finishAndSendResult("Sent images, aaaand... Error!")
-            }
-        })
+                override fun onError(error: VolleyError) {
+                    finishAndSendResult("Sent images, aaaand... Error!")
+                }
+            })
+        }
     }
 
     fun finishAndSendResult(message: String) {
@@ -99,13 +111,8 @@ class ZippyActivity : AppCompatActivity() {
         switchToWizard(documentType)
     }
 
-    private fun switchToCamera(mode: String) {
-        val cameraFragment = CameraFragment()
-        val arguments = Bundle()
-        arguments.putString("mode", mode)
-        cameraFragment.setArguments(arguments)
-
-        supportFragmentManager.beginTransaction().replace(R.id.fragment_container_fl, cameraFragment).commit()
+    private fun switchToCamera(mode: CameraMode) {
+        supportFragmentManager.beginTransaction().replace(R.id.fragment_container_fl, CameraFragment.newInstance(mode)).commit()
         Log.d("ZIPPY", "Switched to camera!")
     }
 

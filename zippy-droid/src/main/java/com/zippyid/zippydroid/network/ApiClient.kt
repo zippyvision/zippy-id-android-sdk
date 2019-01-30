@@ -3,6 +3,7 @@ package com.zippyid.zippydroid.network
 import android.content.Context
 import android.util.Log
 import com.android.volley.Request
+import com.android.volley.RequestQueue
 import com.android.volley.Response
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
@@ -13,7 +14,7 @@ import com.zippyid.zippydroid.network.model.SuccessResponse
 import com.zippyid.zippydroid.network.model.Country
 
 
-class ApiClient(private val secret: String, private val key: String, private val baseUrl: String) {
+class ApiClient(private val secret: String, private val key: String, private val baseUrl: String, context: Context) {
     companion object {
         private const val TAG = "ApiClient"
         private const val REQUEST_TOKEN = "request_tokens"
@@ -23,10 +24,10 @@ class ApiClient(private val secret: String, private val key: String, private val
     }
 
     private val gson = GsonBuilder().create()
+    private val queue: RequestQueue = Volley.newRequestQueue(context)
 
-    fun getToken(context: Context, asyncResponse: AsyncResponse<String>) {
-        val queue = Volley.newRequestQueue(context)
 
+    fun getToken(asyncResponse: AsyncResponse<String>) {
         val request = object : StringRequest(Request.Method.POST, baseUrl + "/v1/" + REQUEST_TOKEN,
             Response.Listener<String> {
                 val authToken = gson.fromJson<AuthToken>(it, AuthToken::class.java)
@@ -49,15 +50,13 @@ class ApiClient(private val secret: String, private val key: String, private val
         queue.add(request)
     }
 
-    fun sendImages(context: Context, documentType: String, encodedFaceImage: String, encodedDocumentFront: String, encodedDocumentBack: String?, customerUid: String, asyncResponse: AsyncResponse<SuccessResponse?>) {
-        val queue = Volley.newRequestQueue(context)
-
+    fun sendImages(documentType: String, encodedFaceImage: String, encodedDocumentFront: String, encodedDocumentBack: String?, customerUid: String, asyncResponse: AsyncResponse<SuccessResponse?>) {
         Log.e(TAG, "Trying to send images!")
 
         val request = object : StringRequest(Request.Method.POST, baseUrl + "/v1/" + VERIFICATION,
             Response.Listener<String> {
                 Log.d(TAG, it)
-                getResult(context, customerUid, asyncResponse)
+                getResult(customerUid, asyncResponse)
             }, Response.ErrorListener {
                 Log.e(TAG, "Error sending images!")
             }) {
@@ -67,13 +66,9 @@ class ApiClient(private val secret: String, private val key: String, private val
                 params["token"] = token
                 params["document_country"] = "lv"
                 params["document_type"] = documentType
-                params["image_data[selfie]"] = "data:image/png;base64,$encodedFaceImage"
-                params["image_data[idFront]"] = "data:image/png;base64,$encodedDocumentFront"
-                if (encodedDocumentBack != null) {
-                    params["image_data[idBack]"] = "data:image/png;base64,$encodedDocumentBack"
-                } else {
-                    params["image_data[idBack]"] = ""
-                }
+                params["image_data[selfie]"] = encodedFaceImage
+                params["image_data[idFront]"] = encodedDocumentFront
+                params["image_data[idBack]"] = if (encodedDocumentBack != null) encodedDocumentBack else ""
                 params["customer_uid"] = customerUid
                 return params
             }
@@ -81,9 +76,7 @@ class ApiClient(private val secret: String, private val key: String, private val
         queue.add(request)
     }
 
-    fun getResult(context: Context, customerUid: String, asyncResponse: AsyncResponse<SuccessResponse?>) {
-        val queue = Volley.newRequestQueue(context)
-
+    fun getResult(customerUid: String, asyncResponse: AsyncResponse<SuccessResponse?>) {
         val uri = "$baseUrl/v1/$RESULT?customer_uid=$customerUid&secret_key=$secret&api_key=$key"
 
         val request = StringRequest(Request.Method.GET, uri,
@@ -100,8 +93,7 @@ class ApiClient(private val secret: String, private val key: String, private val
         queue.add(request)
     }
 
-    fun getCountries(context: Context, asychResponse: AsyncResponse<List<Country>>) {
-        val queue = Volley.newRequestQueue(context)
+    fun getCountries(asychResponse: AsyncResponse<List<Country>>) {
         val uri = "$baseUrl/sdk/countries"
 
         val request = StringRequest(Request.Method.GET, uri,
@@ -111,6 +103,7 @@ class ApiClient(private val secret: String, private val key: String, private val
                 asychResponse.onSuccess(countries)
             }, Response.ErrorListener {
                 Log.e(TAG, "Error getting result!")
+                asychResponse.onError(it)
             })
 
         queue.add(request)

@@ -12,8 +12,8 @@ data class Country(
 )
 
 data class DocumentType(
-    @SerializedName("value")
-    val value: String?,
     @SerializedName("label")
-    val label: String?
+    val label: String?,
+    @SerializedName("value")
+    val value: String?
 ) : Serializable
