@@ -10,7 +10,7 @@ import com.android.volley.toolbox.Volley
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import com.zippyid.zippydroid.network.model.AuthToken
-import com.zippyid.zippydroid.network.model.SuccessResponse
+import com.zippyid.zippydroid.network.model.ZippyResponse
 import com.zippyid.zippydroid.network.model.Country
 
 
@@ -28,13 +28,11 @@ class ApiClient(private val secret: String, private val key: String, private val
 
 
     fun getToken(asyncResponse: AsyncResponse<String>) {
-        val request = object : StringRequest(Request.Method.POST, baseUrl + "/v1/" + REQUEST_TOKEN,
+        val request = object : StringRequest(Request.Method.POST, "$baseUrl/v1/$REQUEST_TOKEN",
             Response.Listener<String> {
                 val authToken = gson.fromJson<AuthToken>(it, AuthToken::class.java)
                 token = authToken.token
-                Log.e(TAG, "Got token: $token")
                 asyncResponse.onSuccess(it)
-                Log.d(TAG, it)
             }, Response.ErrorListener {
                 asyncResponse.onError(it)
                 Log.e(TAG, "Error getting token!")
@@ -50,18 +48,17 @@ class ApiClient(private val secret: String, private val key: String, private val
         queue.add(request)
     }
 
-    fun sendImages(documentType: String, encodedFaceImage: String, encodedDocumentFront: String, encodedDocumentBack: String?, customerUid: String, asyncResponse: AsyncResponse<SuccessResponse?>) {
-        Log.e(TAG, "Trying to send images!")
+    fun sendImages(documentType: String, encodedFaceImage: String, encodedDocumentFront: String, encodedDocumentBack: String?, customerUid: String, asyncResponse: AsyncResponse<ZippyResponse?>) {
+        Log.i(TAG, "Trying to send images!")
 
-        val request = object : StringRequest(Request.Method.POST, baseUrl + "/v1/" + VERIFICATION,
+        val request = object : StringRequest(Request.Method.POST, "$baseUrl/v1/$VERIFICATION",
             Response.Listener<String> {
-                Log.d(TAG, it)
                 getResult(customerUid, asyncResponse)
             }, Response.ErrorListener {
                 Log.e(TAG, "Error sending images!")
             }) {
             override fun getParams(): MutableMap<String, String> {
-                Log.e(TAG, "Token: $token")
+                Log.i(TAG, "Token: $token")
                 val params = HashMap<String, String>()
                 params["token"] = token
                 params["document_country"] = "lv"
@@ -76,14 +73,13 @@ class ApiClient(private val secret: String, private val key: String, private val
         queue.add(request)
     }
 
-    fun getResult(customerUid: String, asyncResponse: AsyncResponse<SuccessResponse?>) {
+    fun getResult(customerUid: String, asyncResponse: AsyncResponse<ZippyResponse?>) {
         val uri = "$baseUrl/v1/$RESULT?customer_uid=$customerUid&secret_key=$secret&api_key=$key"
 
         val request = StringRequest(Request.Method.GET, uri,
             Response.Listener<String> {
-                val listType = object : TypeToken<List<SuccessResponse>>() {}.type
-                val successResponseList = gson.fromJson<List<SuccessResponse>>(it, listType)
-                Log.d(TAG, it)
+                val listType = object : TypeToken<List<ZippyResponse>>() {}.type
+                val successResponseList = gson.fromJson<List<ZippyResponse>>(it, listType)
                 asyncResponse.onSuccess(successResponseList.firstOrNull())
             }, Response.ErrorListener {
                 Log.e(TAG, "Error getting result!")

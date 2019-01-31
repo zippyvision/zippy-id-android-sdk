@@ -63,7 +63,7 @@ class IDVertificationFragment : Fragment() {
 
 
         continueBtn.setOnClickListener {
-            (activity as? ZippyActivity)?.onIDVertificationNextStep(selectedDocumentType)
+            (activity as? ZippyActivity)?.onIDVerificationNextStep(selectedDocumentType)
         }
 
         countrySpinnerOnItemSelectedListener = object : AdapterView.OnItemSelectedListener {

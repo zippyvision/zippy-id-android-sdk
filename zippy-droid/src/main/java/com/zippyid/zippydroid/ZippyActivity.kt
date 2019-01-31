@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.media.Image
 import android.os.Bundle
+import android.os.Parcelable
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import com.android.volley.VolleyError
@@ -12,7 +13,7 @@ import com.zippyid.zippydroid.extension.toEncodedResizedPng
 import com.zippyid.zippydroid.network.ApiClient
 import com.zippyid.zippydroid.network.AsyncResponse
 import com.zippyid.zippydroid.network.model.DocumentType
-import com.zippyid.zippydroid.network.model.SuccessResponse
+import com.zippyid.zippydroid.network.model.ZippyResponse
 import com.zippyid.zippydroid.wizard.IDVertificationFragment
 import com.zippyid.zippydroid.wizard.WizardFragment
 
@@ -60,7 +61,7 @@ class ZippyActivity : AppCompatActivity() {
         switchToCamera(mode)
     }
 
-    fun onIDVertificationNextStep(documentType: DocumentType) {
+    fun onIDVerificationNextStep(documentType: DocumentType) {
         this.documentType = documentType
         switchToWizard(documentType)
     }
@@ -88,27 +89,30 @@ class ZippyActivity : AppCompatActivity() {
 
     fun sendImages(apiClient: ApiClient, documentType: DocumentType) {
         if (documentType.value == null || encodedFaceImage == null || encodedDocumentFrontImage == null) {
-            finishAndSendResult("Error! Missing data")
-        } else {
-            apiClient.sendImages(documentType.value!!, encodedFaceImage!!, encodedDocumentFrontImage!!, encodedDocumentBackImage, "123456", object : AsyncResponse<SuccessResponse?> {
-                override fun onSuccess(response: SuccessResponse?) {
-                    //TODO add proper response handling
-                    finishAndSendResult(response?.state ?: "Couldn't handle response")
-                }
-
-                override fun onError(error: VolleyError) {
-                    finishAndSendResult("Sent images, aaaand... Error!")
-                }
-            })
+            sendResult("Error! Missing data")
         }
+
+        apiClient.sendImages(documentType.value!!, encodedFaceImage!!, encodedDocumentFrontImage!!, encodedDocumentBackImage, "123456", object : AsyncResponse<ZippyResponse?> {
+            override fun onSuccess(response: ZippyResponse?) {
+
+                val bundle = Bundle()
+                bundle.putParcelable("response", response)
+
+                state = ZippyState.DONE
+                switchToWizard(documentType)
+            }
+
+            override fun onError(error: VolleyError) {
+                sendResult(error.toString())
+            }
+        })
     }
 
-    fun finishAndSendResult(message: String) {
+    fun sendResult(message: String) {
         val returnIntent = Intent()
         returnIntent.putExtra(ZippyActivity.ZIPPY_RESULT, message)
         setResult(Activity.RESULT_OK, returnIntent)
-        state = ZippyState.DONE
-        switchToWizard(documentType)
+        finish()
     }
 
     private fun switchToCamera(mode: CameraMode) {

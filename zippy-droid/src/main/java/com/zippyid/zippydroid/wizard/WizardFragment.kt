@@ -91,7 +91,7 @@ class WizardFragment : Fragment() {
                     }
 
                     override fun onError(error: VolleyError) {
-                        (activity as ZippyActivity).finishAndSendResult("God damn it! Error!")
+                        (activity as ZippyActivity).sendResult("God damn it! Error!")
                     }
                 })
             }
@@ -140,7 +140,7 @@ class WizardFragment : Fragment() {
                 processingOkLabelTv.visibility = View.VISIBLE
                 zippyBtn.text = "Finish!"
                 zippyBtn.setOnClickListener {
-                    activity?.finish()
+                    (activity as ZippyActivity).sendResult("finished")
                 }
             }
         }
