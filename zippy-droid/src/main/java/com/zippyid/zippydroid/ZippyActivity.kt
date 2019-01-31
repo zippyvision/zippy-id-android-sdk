@@ -89,29 +89,35 @@ class ZippyActivity : AppCompatActivity() {
 
     fun sendImages(apiClient: ApiClient, documentType: DocumentType) {
         if (documentType.value == null || encodedFaceImage == null || encodedDocumentFrontImage == null) {
-            sendResult("Error! Missing data")
+            Log.e("ERROR", "Missing data")
+            state = ZippyState.LOADING
+            switchToWizard(documentType)
+            return
         }
 
         apiClient.sendImages(documentType.value!!, encodedFaceImage!!, encodedDocumentFrontImage!!, encodedDocumentBackImage, "123456", object : AsyncResponse<ZippyResponse?> {
             override fun onSuccess(response: ZippyResponse?) {
-
-                val bundle = Bundle()
-                bundle.putParcelable("response", response)
-
-                state = ZippyState.DONE
-                switchToWizard(documentType)
+                response?.let { sendResult(it) }
             }
 
             override fun onError(error: VolleyError) {
-                sendResult(error.toString())
+                sendErrorResult(error.toString())
             }
         })
     }
 
-    fun sendResult(message: String) {
+    fun sendResult(response: ZippyResponse) {
+        state = ZippyState.DONE
+        val returnIntent = Intent()
+        returnIntent.putExtra(ZippyActivity.ZIPPY_RESULT, response)
+        setResult(Activity.RESULT_OK, returnIntent)
+        finish()
+    }
+
+    fun sendErrorResult(message: String) {
         val returnIntent = Intent()
         returnIntent.putExtra(ZippyActivity.ZIPPY_RESULT, message)
-        setResult(Activity.RESULT_OK, returnIntent)
+        setResult(Activity.RESULT_CANCELED, returnIntent)
         finish()
     }
 

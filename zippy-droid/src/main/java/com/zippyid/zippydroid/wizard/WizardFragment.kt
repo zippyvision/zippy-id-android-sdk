@@ -91,7 +91,7 @@ class WizardFragment : Fragment() {
                     }
 
                     override fun onError(error: VolleyError) {
-                        (activity as ZippyActivity).sendResult("God damn it! Error!")
+                        (activity as ZippyActivity).sendErrorResult("God damn it! Error!")
                     }
                 })
             }
@@ -129,18 +129,6 @@ class WizardFragment : Fragment() {
                     (activity as ZippyActivity).sendImages(apiClient, documentType)
                     sendingOkLabelTv.visibility = View.VISIBLE
                     zippyBtn.text = "Processing..."
-                }
-            }
-            ZippyActivity.ZippyState.DONE -> {
-                preparingOkLabelTv.visibility = View.VISIBLE
-                faceOkLabelTv.visibility = View.VISIBLE
-                docFrontOkLabelTv.visibility = View.VISIBLE
-                docBackOkLabelTv.visibility = View.VISIBLE
-                sendingOkLabelTv.visibility = View.VISIBLE
-                processingOkLabelTv.visibility = View.VISIBLE
-                zippyBtn.text = "Finish!"
-                zippyBtn.setOnClickListener {
-                    (activity as ZippyActivity).sendResult("finished")
                 }
             }
         }

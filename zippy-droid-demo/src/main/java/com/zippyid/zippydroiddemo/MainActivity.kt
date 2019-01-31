@@ -4,6 +4,7 @@ import android.content.Intent
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import com.zippyid.zippydroid.ZippyActivity
+import com.zippyid.zippydroid.network.model.ZippyResponse
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
@@ -27,8 +28,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (requestCode == ZIPPY_RESULT_CODE) {
-            val result = data?.getStringExtra(ZippyActivity.ZIPPY_RESULT) ?: "No zippy result :/"
-            result_tv.text = result
+            val result = data?.getParcelableExtra<ZippyResponse>(ZippyActivity.ZIPPY_RESULT)
+            val text = if (result != null) "finished" else "No zippy result :/"
+            val message = data?.getStringExtra(ZippyActivity.ZIPPY_RESULT) ?: text
+            result_tv.text = message
         }
     }
 }
