@@ -91,17 +91,17 @@ class ApiClient(private val secret: String, private val key: String, private val
         queue.add(request)
     }
 
-    fun getCountries(asychResponse: AsyncResponse<List<Country>>) {
+    fun getCountries(asyncResponse: AsyncResponse<List<Country>>) {
         val uri = "$baseUrl/sdk/countries"
 
         val request = StringRequest(Request.Method.GET, uri,
             Response.Listener<String> {
                 val listType = object : TypeToken<List<Country>>() {}.type
                 val countries = gson.fromJson<List<Country>>(it, listType)
-                asychResponse.onSuccess(countries)
+                asyncResponse.onSuccess(countries)
             }, Response.ErrorListener {
                 Log.e(TAG, "Error getting result!")
-                asychResponse.onError(it)
+                asyncResponse.onError(it)
             })
 
         queue.add(request)
