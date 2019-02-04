@@ -409,19 +409,19 @@ class CameraFragment : Fragment() {
     }
 
     private fun showFaceFrame() {
-        faceFrameIv.visibility = View.VISIBLE
+        faceFrameCl.visibility = View.VISIBLE
         documentFrontFrameIv.visibility = View.INVISIBLE
         documentBackFrameIv.visibility = View.INVISIBLE
     }
 
     private fun showDocumentFrontFrame() {
-        faceFrameIv.visibility = View.INVISIBLE
+        faceFrameCl.visibility = View.INVISIBLE
         documentFrontFrameIv.visibility = View.VISIBLE
         documentBackFrameIv.visibility = View.INVISIBLE
     }
 
     private fun showDocumentBackFrame() {
-        faceFrameIv.visibility = View.INVISIBLE
+        faceFrameCl.visibility = View.INVISIBLE
         documentFrontFrameIv.visibility = View.INVISIBLE
         documentBackFrameIv.visibility = View.VISIBLE
     }

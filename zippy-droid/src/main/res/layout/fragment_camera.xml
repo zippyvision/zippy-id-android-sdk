@@ -4,21 +4,57 @@
                                              android:layout_height="match_parent"
                                              xmlns:app="http://schemas.android.com/apk/res-auto">
     <com.zippyid.zippydroid.camera.AutoFitTextureView
-            android:layout_width="0dp"
-            android:layout_height="0dp"
             android:id="@+id/textureView"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintTop_toTopOf="parent" />
-
-    <ImageView
-            android:id="@+id/faceFrameIv"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:src="@drawable/document_back"
-            android:visibility="visible"
-            android:layout_marginTop="15dp"
-            android:layout_marginBottom="15dp" />
+            android:adjustViewBounds="true"
+            app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintTop_toTopOf="parent" />
+
+    <android.support.constraint.ConstraintLayout
+            android:id="@+id/faceFrameCl"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:visibility="visible">
+
+        <ImageView
+                android:id="@+id/opaqueBackgroundTopIv"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:src="@drawable/opaque_background"
+                android:scaleType="fitXY"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toTopOf="@id/faceFrameIv"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+        <ImageView
+                android:id="@+id/faceFrameIv"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:src="@drawable/face_frame"
+                android:adjustViewBounds="true"
+                app:layout_constraintTop_toBottomOf="@id/opaqueBackgroundTopIv"
+                app:layout_constraintBottom_toTopOf="@id/opaqueBackgroundBottomIv"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+        <ImageView
+                android:id="@+id/opaqueBackgroundBottomIv"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:src="@drawable/opaque_background"
+                android:scaleType="fitXY"
+                app:layout_constraintTop_toBottomOf="@id/faceFrameIv"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+    </android.support.constraint.ConstraintLayout>
+
+
+
 
     <ImageView
             android:id="@+id/documentFrontFrameIv"
@@ -35,12 +71,11 @@
             android:layout_height="match_parent"
             android:src="@drawable/document_back"
             android:visibility="invisible"
-            android:layout_marginTop="15dp"
-            android:layout_marginBottom="95dp" />
+            tools:layout_editor_absoluteY="102dp" tools:layout_editor_absoluteX="0dp"/>
 
     <Button
             android:id="@+id/takePictureBtn"
-            android:background="@drawable/camera_black_button"
+            android:background="@drawable/camera_button"
             android:layout_width="60dp"
             android:layout_height="60dp"
             app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent"
