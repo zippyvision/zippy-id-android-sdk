@@ -4,7 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.media.Image
 import android.os.Bundle
-import android.os.Parcelable
+import android.os.Handler
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import com.android.volley.VolleyError
@@ -13,6 +13,7 @@ import com.zippyid.zippydroid.extension.toEncodedResizedPng
 import com.zippyid.zippydroid.network.ApiClient
 import com.zippyid.zippydroid.network.AsyncResponse
 import com.zippyid.zippydroid.network.model.DocumentType
+import com.zippyid.zippydroid.network.model.SessionConfig
 import com.zippyid.zippydroid.network.model.ZippyResponse
 import com.zippyid.zippydroid.wizard.IDVertificationFragment
 import com.zippyid.zippydroid.wizard.WizardFragment
@@ -44,16 +45,18 @@ class ZippyActivity : AppCompatActivity() {
         DOCUMENT_BACK
     }
 
+    private val TAG = "ZippyActivity"
     private var encodedFaceImage: String? = null
     private var encodedDocumentFrontImage: String? = null
     private var encodedDocumentBackImage: String? = null
     var state = ZippyState.LOADING
     lateinit var documentType: DocumentType
+    lateinit var sessionConfiguration: SessionConfig
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_zippy)
-
+        sessionConfiguration = intent.getParcelableExtra("SESSION_CONFIGURATION")
         switchToIDVertification()
     }
 
@@ -95,9 +98,10 @@ class ZippyActivity : AppCompatActivity() {
             return
         }
 
-        apiClient.sendImages(documentType.value!!, encodedFaceImage!!, encodedDocumentFrontImage!!, encodedDocumentBackImage, "123456", object : AsyncResponse<ZippyResponse?> {
+        apiClient.sendImages(documentType.value!!, encodedFaceImage!!, encodedDocumentFrontImage!!, encodedDocumentBackImage, sessionConfiguration.customerId!!, object : AsyncResponse<ZippyResponse?> {
             override fun onSuccess(response: ZippyResponse?) {
-                response?.let { sendResult(it) }
+                state = ZippyState.DONE
+                pollJobStatus(apiClient)
             }
 
             override fun onError(error: VolleyError) {
@@ -106,14 +110,47 @@ class ZippyActivity : AppCompatActivity() {
         })
     }
 
-    fun sendResult(response: ZippyResponse) {
-        state = ZippyState.DONE
-        val returnIntent = Intent()
-        returnIntent.putExtra(ZippyActivity.ZIPPY_RESULT, response)
-        setResult(Activity.RESULT_OK, returnIntent)
-        finish()
-    }
+    var count = 0
+    fun pollJobStatus(apiClient: ApiClient) {
+        Log.i(TAG, "Trying to get status: $count")
 
+        if (count == 10) {
+            setResult(Activity.RESULT_CANCELED, null)
+            finish()
+        }
+
+        apiClient
+            .getResult(sessionConfiguration.customerId!!, object : AsyncResponse<ZippyResponse?> {
+                override fun onSuccess(response: ZippyResponse?) {
+                    val returnIntent = Intent()
+                    response?.let { returnIntent.putExtra(ZippyActivity.ZIPPY_RESULT, response) }
+
+                    if (response?.state == "finished") {
+                        setResult(Activity.RESULT_OK, returnIntent)
+                        finish()
+                    } else if (response?.state == "failed") {
+                        setResult(Activity.RESULT_CANCELED, returnIntent)
+                        finish()
+                    } else {
+                        Log.i(TAG, "Scheduling poll")
+                        count += 1
+                        Handler().postDelayed({
+                            pollJobStatus(apiClient)
+                        }, 2000)
+
+                    }
+                }
+
+                override fun onError(error: VolleyError) {
+                    Log.i(TAG, "Error")
+                    count += 1
+                    Handler().postDelayed({
+                        pollJobStatus(apiClient)
+                    }, 2000)
+                }
+            })
+    }
+    
     fun sendErrorResult(message: String) {
         val returnIntent = Intent()
         returnIntent.putExtra(ZippyActivity.ZIPPY_RESULT, message)

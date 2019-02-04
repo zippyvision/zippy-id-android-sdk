@@ -53,7 +53,9 @@ class ApiClient(private val secret: String, private val key: String, private val
 
         val request = object : StringRequest(Request.Method.POST, "$baseUrl/v1/$VERIFICATION",
             Response.Listener<String> {
-                getResult(customerUid, asyncResponse)
+                Log.e(TAG, "Successfully sending images!")
+                asyncResponse.onSuccess(null)
+
             }, Response.ErrorListener {
                 Log.e(TAG, "Error sending images!")
             }) {

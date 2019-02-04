@@ -30,7 +30,7 @@ class WizardFragment : Fragment() {
         ): WizardFragment {
             val bundle = Bundle()
             bundle.putSerializable(ZIPPY_STATE, state)
-            bundle.putSerializable(DOCUMENT_TYPE, documentType)
+            bundle.putParcelable(DOCUMENT_TYPE, documentType)
             val fragment = WizardFragment()
             fragment.arguments = bundle
             return fragment
@@ -51,7 +51,7 @@ class WizardFragment : Fragment() {
 
         state = arguments?.getSerializable(ZIPPY_STATE) as? ZippyActivity.ZippyState
                 ?: throw IllegalArgumentException("State was not passed to WizardFragment!")
-        documentType = arguments?.getSerializable(DOCUMENT_TYPE) as? DocumentType
+        documentType = arguments?.getParcelable(DOCUMENT_TYPE) as? DocumentType
                 ?: throw IllegalArgumentException("Document type was not passed to WizardFragment!")
 
         adjustViews()
