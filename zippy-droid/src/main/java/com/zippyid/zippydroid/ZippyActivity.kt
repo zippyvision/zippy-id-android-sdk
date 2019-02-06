@@ -101,7 +101,7 @@ class ZippyActivity : AppCompatActivity() {
         apiClient.sendImages(documentType.value!!, encodedFaceImage!!, encodedDocumentFrontImage!!, encodedDocumentBackImage, sessionConfiguration.customerId!!, object : AsyncResponse<Any?> {
             override fun onSuccess(response: Any?) {
                 state = ZippyState.DONE
-                pollJobStatus(apiClient)
+                pollJobStatus(apiClient, null)
             }
 
             override fun onError(error: VolleyError) {
@@ -111,11 +111,17 @@ class ZippyActivity : AppCompatActivity() {
     }
 
     var count = 0
-    fun pollJobStatus(apiClient: ApiClient) {
+    fun pollJobStatus(apiClient: ApiClient, error: VolleyError?) {
         Log.i(TAG, "Trying to get status: $count")
+
 
         if (count == 10) {
             setResult(Activity.RESULT_CANCELED, null)
+            val returnIntent = Intent()
+
+            error?.let { returnIntent.putExtra(ZippyActivity.ZIPPY_RESULT, error.localizedMessage) } ?: run {
+                returnIntent.putExtra(ZippyActivity.ZIPPY_RESULT, "Request timed out")
+            }
             finish()
         }
 
@@ -135,7 +141,7 @@ class ZippyActivity : AppCompatActivity() {
                         Log.i(TAG, "Scheduling poll")
                         count += 1
                         Handler().postDelayed({
-                            pollJobStatus(apiClient)
+                            pollJobStatus(apiClient, null)
                         }, 2000)
 
                     }
@@ -145,7 +151,7 @@ class ZippyActivity : AppCompatActivity() {
                     Log.i(TAG, "Error")
                     count += 1
                     Handler().postDelayed({
-                        pollJobStatus(apiClient)
+                        pollJobStatus(apiClient, error)
                     }, 2000)
                 }
             })

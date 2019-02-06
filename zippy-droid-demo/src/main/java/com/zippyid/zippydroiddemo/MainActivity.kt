@@ -1,5 +1,6 @@
 package com.zippyid.zippydroiddemo
 
+import android.app.Activity
 import android.content.Intent
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
@@ -38,10 +39,12 @@ class MainActivity : AppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (requestCode == ZIPPY_RESULT_CODE) {
-            val result = data?.getParcelableExtra<ZippyResponse>(ZippyActivity.ZIPPY_RESULT)
-            val text = if (result != null) "finished" else "No zippy result :/"
-            val message = data?.getStringExtra(ZippyActivity.ZIPPY_RESULT) ?: text
-            result_tv.text = message
+            result_tv.text = data?.getStringExtra(ZippyActivity.ZIPPY_RESULT) ?: "error"
+            if (resultCode == Activity.RESULT_OK) {
+                val result = data?.getParcelableExtra<ZippyResponse>(ZippyActivity.ZIPPY_RESULT)
+            } else {
+                val error = data?.getStringExtra(ZippyActivity.ZIPPY_RESULT)
+            }
         }
     }
 }
