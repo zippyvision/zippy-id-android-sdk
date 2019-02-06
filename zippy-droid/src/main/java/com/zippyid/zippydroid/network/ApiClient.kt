@@ -48,7 +48,7 @@ class ApiClient(private val secret: String, private val key: String, private val
         queue.add(request)
     }
 
-    fun sendImages(documentType: String, encodedFaceImage: String, encodedDocumentFront: String, encodedDocumentBack: String?, customerUid: String, asyncResponse: AsyncResponse<ZippyResponse?>) {
+    fun sendImages(documentType: String, encodedFaceImage: String, encodedDocumentFront: String, encodedDocumentBack: String?, customerUid: String, asyncResponse: AsyncResponse<Any?>) {
         Log.i(TAG, "Trying to send images!")
 
         val request = object : StringRequest(Request.Method.POST, "$baseUrl/v1/$VERIFICATION",
