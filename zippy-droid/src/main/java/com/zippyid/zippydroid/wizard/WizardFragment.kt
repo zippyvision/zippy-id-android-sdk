@@ -55,17 +55,6 @@ class WizardFragment : Fragment() {
                 ?: throw IllegalArgumentException("Document type was not passed to WizardFragment!")
 
         adjustViews()
-
-        helpLabelTv.setOnClickListener{
-            zippyBtn.visibility = View.INVISIBLE
-            exampleIv.visibility = View.VISIBLE
-        }
-
-        exampleIv.setOnClickListener {
-            exampleIv.visibility = View.GONE
-            zippyBtn.visibility = View.VISIBLE
-        }
-
         processAccordingToState()
     }
 
@@ -74,10 +63,6 @@ class WizardFragment : Fragment() {
             documentBackLabelTv.visibility = View.GONE
             docBackOkLabelTv.setText("")
         }
-
-        var spannable = SpannableString("Need help with picture? Check out Picture example")
-        spannable.setSpan(ForegroundColorSpan(Color.parseColor("#FF8700")), "Need help with picture? ".length, "Need help with picture? Check out Picture example".length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-        helpLabelTv.setText(spannable, TextView.BufferType.SPANNABLE)
     }
 
     private fun processAccordingToState() {

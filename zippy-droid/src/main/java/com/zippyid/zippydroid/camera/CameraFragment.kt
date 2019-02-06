@@ -30,6 +30,45 @@ import java.util.concurrent.TimeUnit
 class CameraFragment : Fragment() {
 
     companion object {
+        /**
+         * Tag for the [Log].
+         */
+        private const val TAG = "Camera2BasicFragment"
+
+        /**
+         * Camera state: Showing camera preview.
+         */
+        private const val STATE_PREVIEW = 0
+
+        /**
+         * Camera state: Waiting for the focus to be locked.
+         */
+        private const val STATE_WAITING_LOCK = 1
+
+        /**
+         * Camera state: Waiting for the exposure to be precapture state.
+         */
+        private const val STATE_WAITING_PRECAPTURE = 2
+
+        /**
+         * Camera state: Waiting for the exposure state to be something other than precapture.
+         */
+        private const val STATE_WAITING_NON_PRECAPTURE = 3
+
+        /**
+         * Camera state: Picture was taken.
+         */
+        private const val STATE_PICTURE_TAKEN = 4
+
+        /**
+         * Max preview width that is guaranteed by Camera2 API
+         */
+        private const val MAX_PREVIEW_WIDTH = 1920
+
+        /**
+         * Max preview height that is guaranteed by Camera2 API
+         */
+        private const val MAX_PREVIEW_HEIGHT = 1080
 
         private const val CAMERA_MODE = "camera_mode"
         private const val REQUEST_CAMERA_PERMISSION = 1
@@ -53,46 +92,6 @@ class CameraFragment : Fragment() {
             return fragment
         }
     }
-
-    /**
-     * Tag for the [Log].
-     */
-    private val TAG = "Camera2BasicFragment"
-
-    /**
-     * Camera state: Showing camera preview.
-     */
-    private val STATE_PREVIEW = 0
-
-    /**
-     * Camera state: Waiting for the focus to be locked.
-     */
-    private val STATE_WAITING_LOCK = 1
-
-    /**
-     * Camera state: Waiting for the exposure to be precapture state.
-     */
-    private val STATE_WAITING_PRECAPTURE = 2
-
-    /**
-     * Camera state: Waiting for the exposure state to be something other than precapture.
-     */
-    private val STATE_WAITING_NON_PRECAPTURE = 3
-
-    /**
-     * Camera state: Picture was taken.
-     */
-    private val STATE_PICTURE_TAKEN = 4
-
-    /**
-     * Max preview width that is guaranteed by Camera2 API
-     */
-    private val MAX_PREVIEW_WIDTH = 1920
-
-    /**
-     * Max preview height that is guaranteed by Camera2 API
-     */
-    private val MAX_PREVIEW_HEIGHT = 1080
 
     /**
      * ID of the current [CameraDevice].
@@ -186,7 +185,7 @@ class CameraFragment : Fragment() {
         val characteristics = manager.getCameraCharacteristics(cameraId)
 
         val imageOrientation =
-            getImageOrientation(characteristics, activity!!.getWindowManager().getDefaultDisplay().getRotation())
+            getImageOrientation(characteristics, activity!!.windowManager.defaultDisplay.rotation)
 
         (activity as ZippyActivity).onCaptureCompleted(image, imageOrientation)
     }
@@ -242,7 +241,8 @@ class CameraFragment : Fragment() {
                 }// We have nothing to do when the camera preview is working normally.
                 STATE_WAITING_LOCK -> {
                     val afState = result.get(CaptureResult.CONTROL_AF_STATE)
-                    if (afState == null) {
+                    if (afState == null || afState == 0) {
+                        state = STATE_PICTURE_TAKEN
                         captureStillPicture()
                     } else if (CaptureResult.CONTROL_AF_STATE_FOCUSED_LOCKED == afState || CaptureResult.CONTROL_AF_STATE_NOT_FOCUSED_LOCKED == afState) {
                         // CONTROL_AE_STATE can be null on some devices
@@ -356,7 +356,7 @@ class CameraFragment : Fragment() {
             return
         }
 
-        arguments = getArguments()
+        arguments = arguments
         val mode = arguments?.getSerializable(CameraFragment.CAMERA_MODE) as? ZippyActivity.CameraMode
                 ?: throw IllegalArgumentException("Mode was not passed to CameraFragment!")
 
@@ -388,23 +388,23 @@ class CameraFragment : Fragment() {
 
     private fun closeCamera() {
         try {
-            cameraOpenCloseLock.acquire();
+            cameraOpenCloseLock.acquire()
             if (null != captureSession) {
-                captureSession?.close();
-                captureSession = null;
+                captureSession?.close()
+                captureSession = null
             }
             if (null != cameraDevice) {
-                cameraDevice?.close();
-                cameraDevice = null;
+                cameraDevice?.close()
+                cameraDevice = null
             }
             if (null != imageReader) {
-                imageReader?.close();
-                imageReader = null;
+                imageReader?.close()
+                imageReader = null
             }
         } catch (e: InterruptedException) {
-            throw RuntimeException("Interrupted while trying to lock camera closing.", e);
+            throw RuntimeException("Interrupted while trying to lock camera closing.", e)
         } finally {
-            cameraOpenCloseLock.release();
+            cameraOpenCloseLock.release()
         }
     }
 
@@ -431,18 +431,18 @@ class CameraFragment : Fragment() {
         if (null == textureView || null == previewSize) {
             return
         }
-        val rotation = activity?.getWindowManager()?.getDefaultDisplay()?.getRotation()
+        val rotation = activity?.windowManager?.defaultDisplay?.rotation
         val matrix = Matrix()
         val viewRect = RectF(0f, 0f, viewWidth.toFloat(), viewHeight.toFloat())
-        val bufferRect = RectF(0f, 0f, previewSize!!.getHeight().toFloat(), previewSize!!.getWidth().toFloat())
+        val bufferRect = RectF(0f, 0f, previewSize!!.height.toFloat(), previewSize!!.width.toFloat())
         val centerX = viewRect.centerX()
         val centerY = viewRect.centerY()
         if (Surface.ROTATION_90 == rotation || Surface.ROTATION_270 == rotation) {
             bufferRect.offset(centerX - bufferRect.centerX(), centerY - bufferRect.centerY())
             matrix.setRectToRect(viewRect, bufferRect, Matrix.ScaleToFit.FILL)
             val scale = Math.max(
-                viewHeight.toFloat() / previewSize!!.getHeight(),
-                viewWidth.toFloat() / previewSize!!.getWidth()
+                viewHeight.toFloat() / previewSize!!.height,
+                viewWidth.toFloat() / previewSize!!.width
             )
             matrix.postScale(scale, scale, centerX, centerY)
             matrix.postRotate((90 * (rotation - 2)).toFloat(), centerX, centerY)
@@ -485,7 +485,7 @@ class CameraFragment : Fragment() {
 
                 // Find out if we need to swap dimension to get the preview size relative to sensor
                 // coordinate.
-                val displayRotation = activity?.getWindowManager()?.getDefaultDisplay()?.getRotation()
+                val displayRotation = activity?.windowManager?.defaultDisplay?.rotation
 
                 sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)!!
                 var swappedDimensions = false
@@ -500,7 +500,7 @@ class CameraFragment : Fragment() {
                 }
 
                 val displaySize = Point()
-                activity?.getWindowManager()?.getDefaultDisplay()?.getSize(displaySize)
+                activity?.windowManager?.defaultDisplay?.getSize(displaySize)
                 var rotatedPreviewWidth = width
                 var rotatedPreviewHeight = height
                 var maxPreviewWidth = displaySize.x
@@ -534,11 +534,11 @@ class CameraFragment : Fragment() {
                 val orientation = resources.configuration.orientation
                 if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
                     textureView.setAspectRatio(
-                        previewSize!!.getWidth(), previewSize!!.getHeight()
+                        previewSize!!.width, previewSize!!.height
                     )
                 } else {
                     textureView.setAspectRatio(
-                        previewSize!!.getHeight(), previewSize!!.getWidth()
+                        previewSize!!.height, previewSize!!.width
                     )
                 }
 
@@ -587,13 +587,13 @@ class CameraFragment : Fragment() {
 
         // Pick the smallest of those big enough. If there is no one big enough, pick the
         // largest of those not big enough.
-        if (bigEnough.size > 0) {
-            return Collections.min(bigEnough, CompareSizesByArea())
+        return if (bigEnough.size > 0) {
+            Collections.min(bigEnough, CompareSizesByArea())
         } else if (notBigEnough.size > 0) {
-            return Collections.max(notBigEnough, CompareSizesByArea())
+            Collections.max(notBigEnough, CompareSizesByArea())
         } else {
             Log.e(TAG, "Couldn't find any suitable preview size")
-            return choices[0]
+            choices[0]
         }
     }
 
@@ -657,7 +657,7 @@ class CameraFragment : Fragment() {
         try {
             // This is the CaptureRequest.Builder that we use to take a picture.
             val captureBuilder = cameraDevice!!.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE)
-            captureBuilder.addTarget(imageReader!!.getSurface())
+            captureBuilder.addTarget(imageReader!!.surface)
 
             // Use the same AE and AF modes as the preview.
             captureBuilder.set(
@@ -773,7 +773,7 @@ class CameraFragment : Fragment() {
 
                             // Finally, we start displaying the camera preview.
                             previewRequest = previewRequestBuilder!!.build()
-                            captureSession!!.setRepeatingRequest(
+                            captureSession?.setRepeatingRequest(
                                 previewRequest,
                                 mCaptureCallback, backgroundHandler
                             )
@@ -844,7 +844,7 @@ class CameraFragment : Fragment() {
 
         companion object {
 
-            private val ARG_MESSAGE = "message"
+            private const val ARG_MESSAGE = "message"
 
             fun newInstance(message: String): ErrorDialog {
                 val dialog = ErrorDialog()

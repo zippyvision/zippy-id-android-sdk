@@ -49,11 +49,11 @@ class ApiClient(private val secret: String, private val key: String, private val
     }
 
     fun sendImages(documentType: String, encodedFaceImage: String, encodedDocumentFront: String, encodedDocumentBack: String?, customerUid: String, asyncResponse: AsyncResponse<Any?>) {
-        Log.i(TAG, "Trying to send images!")
+        Log.d(TAG, "Trying to send images!")
 
         val request = object : StringRequest(Request.Method.POST, "$baseUrl/v1/$VERIFICATION",
             Response.Listener<String> {
-                Log.e(TAG, "Successfully sending images!")
+                Log.d(TAG, "Successfully sending images!")
                 asyncResponse.onSuccess(null)
 
             }, Response.ErrorListener {
@@ -67,7 +67,7 @@ class ApiClient(private val secret: String, private val key: String, private val
                 params["document_type"] = documentType
                 params["image_data[selfie]"] = encodedFaceImage
                 params["image_data[idFront]"] = encodedDocumentFront
-                params["image_data[idBack]"] = if (encodedDocumentBack != null) encodedDocumentBack else ""
+                params["image_data[idBack]"] = encodedDocumentBack ?: ""
                 params["customer_uid"] = customerUid
                 return params
             }

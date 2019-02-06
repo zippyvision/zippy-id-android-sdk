@@ -21,6 +21,7 @@ import com.zippyid.zippydroid.wizard.WizardFragment
 class ZippyActivity : AppCompatActivity() {
     companion object {
         const val ZIPPY_RESULT = "zippy_result"
+        private const val TAG = "ZippyActivity"
     }
 
     enum class ZippyState {
@@ -45,13 +46,12 @@ class ZippyActivity : AppCompatActivity() {
         DOCUMENT_BACK
     }
 
-    private val TAG = "ZippyActivity"
     private var encodedFaceImage: String? = null
     private var encodedDocumentFrontImage: String? = null
     private var encodedDocumentBackImage: String? = null
     var state = ZippyState.LOADING
-    lateinit var documentType: DocumentType
-    lateinit var sessionConfiguration: SessionConfig
+    private lateinit var documentType: DocumentType
+    private lateinit var sessionConfiguration: SessionConfig
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -98,7 +98,7 @@ class ZippyActivity : AppCompatActivity() {
             return
         }
 
-        apiClient.sendImages(documentType.value!!, encodedFaceImage!!, encodedDocumentFrontImage!!, encodedDocumentBackImage, sessionConfiguration.customerId!!, object : AsyncResponse<Any?> {
+        apiClient.sendImages(documentType.value, encodedFaceImage!!, encodedDocumentFrontImage!!, encodedDocumentBackImage, sessionConfiguration.customerId!!, object : AsyncResponse<Any?> {
             override fun onSuccess(response: Any?) {
                 state = ZippyState.DONE
                 pollJobStatus(apiClient, null)
@@ -131,19 +131,19 @@ class ZippyActivity : AppCompatActivity() {
                     val returnIntent = Intent()
                     response?.let { returnIntent.putExtra(ZippyActivity.ZIPPY_RESULT, response) }
 
-                    if (response?.state == "finished") {
-                        setResult(Activity.RESULT_OK, returnIntent)
-                        finish()
-                    } else if (response?.state == "failed") {
-                        setResult(Activity.RESULT_CANCELED, returnIntent)
-                        finish()
-                    } else {
-                        Log.i(TAG, "Scheduling poll")
-                        count += 1
-                        Handler().postDelayed({
-                            pollJobStatus(apiClient, null)
-                        }, 2000)
+                    when {
+                        !response?.state.isNullOrEmpty() && response?.state != "processing"-> {
+                            setResult(Activity.RESULT_OK, returnIntent)
+                            finish()
+                        }
+                        else -> {
+                            Log.i(TAG, "Scheduling poll")
+                            count += 1
+                            Handler().postDelayed({
+                                pollJobStatus(apiClient, null)
+                            }, 2000)
 
+                        }
                     }
                 }
 
