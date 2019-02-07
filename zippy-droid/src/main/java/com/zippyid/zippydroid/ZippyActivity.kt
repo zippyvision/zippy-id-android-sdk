@@ -2,6 +2,7 @@ package com.zippyid.zippydroid
 
 import android.app.Activity
 import android.content.Intent
+import android.graphics.Bitmap
 import android.media.Image
 import android.os.Bundle
 import android.os.Handler
@@ -9,7 +10,9 @@ import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import com.android.volley.VolleyError
 import com.zippyid.zippydroid.camera.CameraFragment
-import com.zippyid.zippydroid.extension.toEncodedResizedPng
+import com.zippyid.zippydroid.extension.resizeAndRotate
+import com.zippyid.zippydroid.extension.toBitmap
+import com.zippyid.zippydroid.extension.toEncodedPng
 import com.zippyid.zippydroid.network.ApiClient
 import com.zippyid.zippydroid.network.AsyncResponse
 import com.zippyid.zippydroid.network.model.DocumentType
@@ -49,6 +52,16 @@ class ZippyActivity : AppCompatActivity() {
     private var encodedFaceImage: String? = null
     private var encodedDocumentFrontImage: String? = null
     private var encodedDocumentBackImage: String? = null
+
+    private var faceImage: Bitmap? = null
+    private var documentFrontImage: Bitmap? = null
+    private var documentBackImage: Bitmap? = null
+
+    private var faceOrientation = 0
+    private var documentFrontOrientation = 0
+    private var documentBackOrientation = 0
+
+
     var state = ZippyState.LOADING
     private lateinit var documentType: DocumentType
     private lateinit var sessionConfiguration: SessionConfig
@@ -57,7 +70,7 @@ class ZippyActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_zippy)
         sessionConfiguration = intent.getParcelableExtra("SESSION_CONFIGURATION")
-        switchToIDVertification()
+        switchToIDVerification()
     }
 
     fun onWizardNextStep(mode: CameraMode) {
@@ -72,17 +85,20 @@ class ZippyActivity : AppCompatActivity() {
     fun onCaptureCompleted(image: Image, imageOrientation: Int) {
         when (state) {
             ZippyState.READY -> {
-                encodedFaceImage = image.toEncodedResizedPng(imageOrientation)
+                faceImage = image.toBitmap()
+                faceOrientation = imageOrientation
                 state = ZippyState.FACE_TAKEN
                 switchToWizard(documentType)
             }
             ZippyState.FACE_TAKEN -> {
-                encodedDocumentFrontImage = image.toEncodedResizedPng(imageOrientation)
+                documentFrontImage = image.toBitmap()
+                documentFrontOrientation = imageOrientation
                 state = if (documentType.value == DocumentMode.PASSPORT.value) ZippyState.READY_TO_SEND else ZippyState.DOC_FRONT_TAKEN
                 switchToWizard(documentType)
             }
             ZippyState.DOC_FRONT_TAKEN -> {
-                encodedDocumentBackImage = image.toEncodedResizedPng(imageOrientation)
+                documentBackImage = image.toBitmap()
+                documentBackOrientation = imageOrientation
                 state = ZippyState.READY_TO_SEND
                 switchToWizard(documentType)
             }
@@ -91,12 +107,16 @@ class ZippyActivity : AppCompatActivity() {
     }
 
     fun sendImages(apiClient: ApiClient, documentType: DocumentType) {
-        if (documentType.value == null || encodedFaceImage == null || encodedDocumentFrontImage == null) {
+        if (documentType.value == null || faceImage == null || documentFrontImage == null) {
             Log.e("ERROR", "Missing data")
             state = ZippyState.LOADING
             switchToWizard(documentType)
             return
         }
+
+        encodedFaceImage = faceImage!!.resizeAndRotate(faceOrientation)!!.toEncodedPng()
+        encodedDocumentFrontImage = documentFrontImage!!.resizeAndRotate(documentFrontOrientation)!!.toEncodedPng()
+        encodedDocumentBackImage = documentBackImage?.resizeAndRotate(documentBackOrientation)?.toEncodedPng()
 
         apiClient.sendImages(documentType.value, encodedFaceImage!!, encodedDocumentFrontImage!!, encodedDocumentBackImage, sessionConfiguration.customerId!!, object : AsyncResponse<Any?> {
             override fun onSuccess(response: Any?) {
@@ -174,8 +194,8 @@ class ZippyActivity : AppCompatActivity() {
         Log.d("ZIPPY", "Switched to wizard!")
     }
 
-    private fun switchToIDVertification() {
+    private fun switchToIDVerification() {
         supportFragmentManager.beginTransaction().replace(R.id.fragment_container_fl, IDVertificationFragment()).commit()
-        Log.d("ZIPPY", "Switched to ID vertification!")
+        Log.d("ZIPPY", "Switched to ID verification!")
     }
 }
