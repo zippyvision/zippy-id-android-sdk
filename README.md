@@ -25,11 +25,11 @@ allprojects {
 
 and in your app's build gradle add the dependency
 
-`implementation 'com.github.mak-it:zippyid-sdk-android:Tag'`
+`implementation 'com.github.mak-it:zippyid-sdk-android:0.1.2'`
 
 ```
 dependencies {
-   implementation 'com.github.mak-it:zippyid-sdk-android:Tag'
+   implementation 'com.github.mak-it:zippyid-sdk-android:0.1.2'
 }
 ```
 
