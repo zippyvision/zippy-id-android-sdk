@@ -10,6 +10,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import com.android.volley.AuthFailureError
 import com.android.volley.VolleyError
 import com.zippyid.zippydroid.R
 import com.zippyid.zippydroid.Zippy
@@ -76,7 +77,13 @@ class WizardFragment : Fragment() {
                     }
 
                     override fun onError(error: VolleyError) {
-                        (activity as ZippyActivity).sendErrorResult("God damn it! Error!")
+                        val message = if (error is AuthFailureError) {
+                            "Authorization error!"
+                        } else {
+                            "Unexpected error!"
+                        }
+
+                        (activity as ZippyActivity).sendErrorResult(message)
                     }
                 })
             }
