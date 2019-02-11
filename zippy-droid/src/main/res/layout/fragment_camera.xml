@@ -11,7 +11,93 @@
             app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintTop_toTopOf="parent" />
 
     <android.support.constraint.ConstraintLayout
-            android:id="@+id/faceFrameCl"
+        android:id="@+id/faceFrameCl"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:visibility="invisible">
+
+    <ImageView
+            android:id="@+id/opaqueBackgroundTopIv"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:src="@drawable/opaque_background"
+            android:scaleType="fitXY"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/faceFrameIv"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+    <ImageView
+            android:id="@+id/faceFrameIv"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:src="@drawable/face_frame_gray"
+            android:adjustViewBounds="true"
+            app:layout_constraintTop_toBottomOf="@id/opaqueBackgroundTopIv"
+            app:layout_constraintBottom_toTopOf="@id/opaqueBackgroundBottomIv"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+    <ImageView
+            android:id="@+id/opaqueBackgroundBottomIv"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:src="@drawable/opaque_background"
+            android:scaleType="fitXY"
+            app:layout_constraintTop_toBottomOf="@id/faceFrameIv"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+</android.support.constraint.ConstraintLayout>
+
+    <android.support.constraint.ConstraintLayout
+            android:id="@+id/documentFrontFrameCl"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:visibility="invisible">
+
+        <ImageView
+                android:id="@+id/documentFrontOpaqueBackgroundTopIv"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:src="@drawable/opaque_background"
+                android:scaleType="fitXY"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toTopOf="@id/documentFrontFrameIv"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+        <ImageView
+                android:id="@+id/documentFrontFrameIv"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:src="@drawable/document_front_frame_gray"
+                android:adjustViewBounds="true"
+                app:layout_constraintTop_toBottomOf="@id/documentFrontOpaqueBackgroundTopIv"
+                app:layout_constraintBottom_toTopOf="@id/documentFrontOpaqueBackgroundBottomIv"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+        <ImageView
+                android:id="@+id/documentFrontOpaqueBackgroundBottomIv"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:src="@drawable/opaque_background"
+                android:scaleType="fitXY"
+                app:layout_constraintTop_toBottomOf="@id/documentFrontFrameIv"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+    </android.support.constraint.ConstraintLayout>
+
+    <android.support.constraint.ConstraintLayout
+            android:id="@+id/documentBackFrameCl"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:layout_constraintTop_toTopOf="parent"
@@ -19,64 +105,67 @@
             android:visibility="visible">
 
         <ImageView
-                android:id="@+id/opaqueBackgroundTopIv"
+                android:id="@+id/documentBackOpaqueBackgroundTopIv"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
                 android:src="@drawable/opaque_background"
                 android:scaleType="fitXY"
                 app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toTopOf="@id/faceFrameIv"
+                app:layout_constraintBottom_toTopOf="@id/documentBackFrameIv"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
 
         <ImageView
-                android:id="@+id/faceFrameIv"
+                android:id="@+id/documentBackFrameIv"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:src="@drawable/face_frame"
+                android:src="@drawable/document_back_frame_gray"
                 android:adjustViewBounds="true"
-                app:layout_constraintTop_toBottomOf="@id/opaqueBackgroundTopIv"
-                app:layout_constraintBottom_toTopOf="@id/opaqueBackgroundBottomIv"
+                app:layout_constraintTop_toBottomOf="@id/documentBackOpaqueBackgroundTopIv"
+                app:layout_constraintBottom_toTopOf="@id/documentBackOpaqueBackgroundBottomIv"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
 
         <ImageView
-                android:id="@+id/opaqueBackgroundBottomIv"
+                android:id="@+id/documentBackOpaqueBackgroundBottomIv"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
                 android:src="@drawable/opaque_background"
                 android:scaleType="fitXY"
-                app:layout_constraintTop_toBottomOf="@id/faceFrameIv"
+                app:layout_constraintTop_toBottomOf="@id/documentBackFrameIv"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
 
     </android.support.constraint.ConstraintLayout>
 
-
-
-
-    <ImageView
-            android:id="@+id/documentFrontFrameIv"
+    <TextView
+            android:id="@+id/titleTv"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:src="@drawable/document_front"
-            android:visibility="invisible"
-            android:layout_marginTop="15dp"
-            android:layout_marginBottom="95dp" />
+            android:layout_height="wrap_content"
+            android:text="Front of driver's license"
+            android:textSize="21dp"
+            android:textColor="#797979"
+            android:gravity="center_horizontal"
+            android:layout_marginTop="25dp"
+            android:layout_marginStart="15dp" android:layout_marginEnd="15dp"
+            app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent"/>
 
-    <ImageView
-            android:id="@+id/documentBackFrameIv"
+    <TextView
+            android:id="@+id/descriptionTv"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:src="@drawable/document_back"
-            android:visibility="invisible"
-            android:layout_marginTop="15dp"
-            android:layout_marginBottom="95dp"/>
+            android:layout_height="wrap_content"
+            android:text="Position the front of your license in the frame"
+            android:textSize="18dp"
+            android:textColor="#797979"
+            android:gravity="center_horizontal"
+            android:layout_marginTop="15dp" android:layout_marginStart="15dp" android:layout_marginEnd="15dp"
+            app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@id/titleTv"/>
+
 
     <Button
             android:id="@+id/takePictureBtn"
-            android:background="@drawable/camera_button"
+            android:background="@drawable/camera_button_gray"
             android:layout_width="60dp"
             android:layout_height="60dp"
             app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent"

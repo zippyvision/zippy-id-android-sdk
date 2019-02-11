@@ -22,6 +22,7 @@ import android.view.*
 import android.widget.Toast
 import com.zippyid.zippydroid.R
 import com.zippyid.zippydroid.ZippyActivity
+import com.zippyid.zippydroid.network.model.DocumentType
 import kotlinx.android.synthetic.main.fragment_camera.*
 import java.util.*
 import java.util.concurrent.Semaphore
@@ -71,6 +72,7 @@ class CameraFragment : Fragment() {
         private const val MAX_PREVIEW_HEIGHT = 1080
 
         private const val CAMERA_MODE = "camera_mode"
+        private const val DOCUMENT_TYPE = "document_type"
         private const val REQUEST_CAMERA_PERMISSION = 1
         private const val FRAGMENT_DIALOG = "dialog"
         private val ORIENTATIONS = SparseIntArray()
@@ -83,10 +85,12 @@ class CameraFragment : Fragment() {
         }
 
         fun newInstance(
-            mode: ZippyActivity.CameraMode
+            mode: ZippyActivity.CameraMode,
+            documentType: DocumentType?
         ): CameraFragment {
             val bundle = Bundle()
             bundle.putSerializable(CameraFragment.CAMERA_MODE, mode)
+            bundle.putParcelable(CameraFragment.DOCUMENT_TYPE, documentType)
             val fragment = CameraFragment()
             fragment.arguments = bundle
             return fragment
@@ -359,16 +363,18 @@ class CameraFragment : Fragment() {
         arguments = arguments
         val mode = arguments?.getSerializable(CameraFragment.CAMERA_MODE) as? ZippyActivity.CameraMode
                 ?: throw IllegalArgumentException("Mode was not passed to CameraFragment!")
+        val documentType = arguments?.getParcelable(CameraFragment.DOCUMENT_TYPE) as? DocumentType
+            ?: throw IllegalArgumentException("Document type was not passed to CameraFragment!")
 
         if (mode == ZippyActivity.CameraMode.FACE) {
             this.cameraId = "1"
             showFaceFrame()
         } else if (mode == ZippyActivity.CameraMode.DOCUMENT_FRONT) {
             this.cameraId = "0"
-            showDocumentFrontFrame()
+            showDocumentFrontFrame(documentType)
         } else if (mode == ZippyActivity.CameraMode.DOCUMENT_BACK) {
             this.cameraId = "0"
-            showDocumentBackFrame()
+            showDocumentBackFrame(documentType)
         }
 
         this.cameraId?.let { setUpCameraOutputs(width, height, it, manager) }
@@ -410,20 +416,49 @@ class CameraFragment : Fragment() {
 
     private fun showFaceFrame() {
         faceFrameCl.visibility = View.VISIBLE
-        documentFrontFrameIv.visibility = View.INVISIBLE
-        documentBackFrameIv.visibility = View.INVISIBLE
+        documentFrontFrameCl.visibility = View.INVISIBLE
+        documentBackFrameCl.visibility = View.INVISIBLE
+
+        titleTv.text = ""
+        descriptionTv.text = ""
     }
 
-    private fun showDocumentFrontFrame() {
+    private fun showDocumentFrontFrame(documentType: DocumentType) {
         faceFrameCl.visibility = View.INVISIBLE
-        documentFrontFrameIv.visibility = View.VISIBLE
-        documentBackFrameIv.visibility = View.INVISIBLE
+        documentFrontFrameCl.visibility = View.VISIBLE
+        documentBackFrameCl.visibility = View.INVISIBLE
+
+        when (documentType.value) {
+            "passport" -> {
+                titleTv.text = "Passport"
+                descriptionTv.text = "Position your passport in the frame"
+            }
+            "drivers_licence" -> {
+                titleTv.text = "Front of driver's license"
+                descriptionTv.text = "Position the front of your license in the frame"
+            }
+            "id_card" -> {
+                titleTv.text = "Front of ID card"
+                descriptionTv.text = "Position the front of your ID card in the frame"
+            }
+        }
     }
 
-    private fun showDocumentBackFrame() {
+    private fun showDocumentBackFrame(documentType: DocumentType) {
         faceFrameCl.visibility = View.INVISIBLE
-        documentFrontFrameIv.visibility = View.INVISIBLE
-        documentBackFrameIv.visibility = View.VISIBLE
+        documentFrontFrameCl.visibility = View.INVISIBLE
+        documentBackFrameCl.visibility = View.VISIBLE
+
+        when (documentType.value) {
+            "drivers_licence" -> {
+                titleTv.text = "Back of driver's license"
+                descriptionTv.text = "Position the back of your license in the frame"
+            }
+            "id_card" -> {
+                titleTv.text = "Back of ID card"
+                descriptionTv.text = "Position the back of your ID card in the frame"
+            }
+        }
     }
 
 

@@ -63,15 +63,13 @@ class PhotoConfirmationFragment: Fragment()  {
             ZippyActivity.CameraMode.DOCUMENT_FRONT -> {
                 descriptionTv.text = "Make sure your license details are clear to read, with no blur or glare"
                 isReadableBtn.text = "My license ir readable"
-                var rotatedImage = rotateImage((activity as ZippyActivity).documentFrontImage!!)
-                photoIv.setImageBitmap(rotatedImage)
+                photoIv.setImageBitmap((activity as ZippyActivity).documentFrontImage)
 
             }
             ZippyActivity.CameraMode.DOCUMENT_BACK -> {
                 descriptionTv.text = "Make sure your license details are clear to read, with no blur or glare"
                 isReadableBtn.text = "My license ir readable"
-                var rotatedImage = rotateImage((activity as ZippyActivity).documentBackImage!!)
-                photoIv.setImageBitmap(rotatedImage)
+                photoIv.setImageBitmap((activity as ZippyActivity).documentBackImage)
 
             }
         }
