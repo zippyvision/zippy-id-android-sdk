@@ -19,7 +19,9 @@ import com.zippyid.zippydroid.network.model.DocumentType
 import com.zippyid.zippydroid.network.model.SessionConfig
 import com.zippyid.zippydroid.network.model.ZippyResponse
 import com.zippyid.zippydroid.wizard.IDVertificationFragment
+import com.zippyid.zippydroid.wizard.PhotoConfirmationFragment
 import com.zippyid.zippydroid.wizard.WizardFragment
+import java.io.ByteArrayOutputStream
 
 class ZippyActivity : AppCompatActivity() {
     companion object {
@@ -82,25 +84,41 @@ class ZippyActivity : AppCompatActivity() {
         switchToWizard(documentType)
     }
 
+    fun onPhotoConfirmationIsReadableStep() {
+        when (state) {
+            ZippyState.READY -> {
+                state = ZippyState.FACE_TAKEN
+            }
+            ZippyState.FACE_TAKEN -> {
+                state = if (documentType.value == DocumentMode.PASSPORT.value) ZippyState.READY_TO_SEND else ZippyState.DOC_FRONT_TAKEN
+            }
+            ZippyState.DOC_FRONT_TAKEN -> {
+                state = ZippyState.READY_TO_SEND
+            }
+        }
+        switchToWizard(documentType)
+    }
+
+    fun onPhotoConfirmationTakeNewPhotoStep(mode: CameraMode) {
+        switchToCamera(mode)
+    }
+
     fun onCaptureCompleted(image: Image, imageOrientation: Int) {
         when (state) {
             ZippyState.READY -> {
                 faceImage = image.toBitmap()
                 faceOrientation = imageOrientation
-                state = ZippyState.FACE_TAKEN
-                switchToWizard(documentType)
+                faceImage?.let { switchToPhotoConfirmation(it, CameraMode.FACE) }
             }
             ZippyState.FACE_TAKEN -> {
                 documentFrontImage = image.toBitmap()
                 documentFrontOrientation = imageOrientation
-                state = if (documentType.value == DocumentMode.PASSPORT.value) ZippyState.READY_TO_SEND else ZippyState.DOC_FRONT_TAKEN
-                switchToWizard(documentType)
+                documentFrontImage?.let { switchToPhotoConfirmation(it, CameraMode.DOCUMENT_FRONT) }
             }
             ZippyState.DOC_FRONT_TAKEN -> {
                 documentBackImage = image.toBitmap()
                 documentBackOrientation = imageOrientation
-                state = ZippyState.READY_TO_SEND
-                switchToWizard(documentType)
+                documentBackImage?.let { switchToPhotoConfirmation(it, CameraMode.DOCUMENT_BACK) }
             }
             else -> throw IllegalStateException("Unknown state after capture! Crashing...")
         }
@@ -197,5 +215,14 @@ class ZippyActivity : AppCompatActivity() {
     private fun switchToIDVerification() {
         supportFragmentManager.beginTransaction().replace(R.id.fragment_container_fl, IDVertificationFragment()).commit()
         Log.d("ZIPPY", "Switched to ID verification!")
+    }
+
+    private fun switchToPhotoConfirmation(bitmapImage: Bitmap, mode: CameraMode) {
+        var stream = ByteArrayOutputStream()
+        bitmapImage.compress(Bitmap.CompressFormat.PNG, 100, stream)
+        var byteArray = stream.toByteArray()
+
+        supportFragmentManager.beginTransaction().replace(R.id.fragment_container_fl, PhotoConfirmationFragment.newInstance(mode, byteArray)).commit()
+        Log.d("ZIPPY", "Switched to Photo confirmation!")
     }
 }

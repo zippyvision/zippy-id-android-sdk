@@ -457,18 +457,17 @@ class CameraFragment : Fragment() {
     private fun setUpCameraOutputs(width: Int, height: Int, cameraModeId: String, manager: CameraManager) {
 
         try {
-            for (cameraId in manager.cameraIdList) {
-                val characteristics = manager.getCameraCharacteristics(cameraId)
+            val characteristics = manager.getCameraCharacteristics(cameraModeId)
 
-                // We don't use a front facing camera in this sample.
-                val facing = characteristics.get(CameraCharacteristics.LENS_FACING)
-                if (facing != null && facing == CameraCharacteristics.LENS_FACING_FRONT) {
-                    continue
-                }
+            // We don't use a front facing camera in this sample.
+            val facing = characteristics.get(CameraCharacteristics.LENS_FACING)
+            if (facing != null && facing == CameraCharacteristics.LENS_FACING_FRONT) {
+                Log.i(TAG, "Using front camera ")
+            }
 
                 val map = characteristics.get(
                     CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP
-                ) ?: continue
+                )
 
                 // For still image captures, we use the largest available size.
                 val largest = Collections.max(
@@ -550,7 +549,7 @@ class CameraFragment : Fragment() {
                 this.cameraId = if(manager.cameraIdList.contains(cameraModeId)) cameraModeId else cameraId
                 
                 return
-            }
+
         } catch (e: CameraAccessException) {
             e.printStackTrace()
         } catch (e: NullPointerException) {

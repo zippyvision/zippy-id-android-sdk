@@ -100,7 +100,7 @@ class ApiClient(private val secret: String, private val key: String, private val
                 val countries = gson.fromJson<List<Country>>(it, listType)
                 asyncResponse.onSuccess(countries)
             }, Response.ErrorListener {
-                Log.e(TAG, "Error getting result!")
+                Log.e(TAG, "Error getting countries!")
                 asyncResponse.onError(it)
             })
 
