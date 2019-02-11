@@ -17,23 +17,18 @@ import kotlinx.android.synthetic.main.fragment_photo_confirmation.*
 class PhotoConfirmationFragment: Fragment()  {
     companion object {
         private const val CAMERA_MODE = "camera_mode"
-        private const val BITMAP_IMAGE_BYTE_ARRAY = "bitmap_image_byte_array"
 
         fun newInstance(
-            mode: ZippyActivity.CameraMode,
-            imageByteArray: ByteArray
+            mode: ZippyActivity.CameraMode
         ): PhotoConfirmationFragment {
             val bundle = Bundle()
             bundle.putSerializable(PhotoConfirmationFragment.CAMERA_MODE, mode)
-            bundle.putByteArray(PhotoConfirmationFragment.BITMAP_IMAGE_BYTE_ARRAY, imageByteArray)
             val fragment = PhotoConfirmationFragment()
             fragment.arguments = bundle
             return fragment
         }
     }
 
-
-    private lateinit var imageByteArray: ByteArray
     private lateinit var mode: ZippyActivity.CameraMode
     private lateinit var apiClient: ApiClient
 
@@ -50,18 +45,6 @@ class PhotoConfirmationFragment: Fragment()  {
 
         adjustForMode()
 
-        imageByteArray = arguments?.getByteArray(PhotoConfirmationFragment.BITMAP_IMAGE_BYTE_ARRAY)
-            ?: throw IllegalArgumentException("Bitmap image byte array was not passed to PhotoConfirmationFragment!")
-
-        var bitmap = BitmapFactory.decodeByteArray(imageByteArray, 0, imageByteArray.size)
-
-        if (mode == ZippyActivity.CameraMode.FACE) {
-            photoIv.setImageBitmap(bitmap)
-        } else {
-            bitmap = rotateImage(bitmap)
-            photoIv.setImageBitmap(bitmap)
-        }
-
         isReadableBtn.setOnClickListener {
             (activity as? ZippyActivity)?.onPhotoConfirmationIsReadableStep()
         }
@@ -75,10 +58,21 @@ class PhotoConfirmationFragment: Fragment()  {
             ZippyActivity.CameraMode.FACE -> {
                 descriptionTv.text = "Make sure your face is recognizable, with no blur or glare"
                 isReadableBtn.text = "My face is recognizable"
+                photoIv.setImageBitmap((activity as ZippyActivity).faceImage)
             }
-            ZippyActivity.CameraMode.DOCUMENT_FRONT, ZippyActivity.CameraMode.DOCUMENT_BACK -> {
+            ZippyActivity.CameraMode.DOCUMENT_FRONT -> {
                 descriptionTv.text = "Make sure your license details are clear to read, with no blur or glare"
                 isReadableBtn.text = "My license ir readable"
+                var rotatedImage = rotateImage((activity as ZippyActivity).documentFrontImage!!)
+                photoIv.setImageBitmap(rotatedImage)
+
+            }
+            ZippyActivity.CameraMode.DOCUMENT_BACK -> {
+                descriptionTv.text = "Make sure your license details are clear to read, with no blur or glare"
+                isReadableBtn.text = "My license ir readable"
+                var rotatedImage = rotateImage((activity as ZippyActivity).documentBackImage!!)
+                photoIv.setImageBitmap(rotatedImage)
+
             }
         }
     }

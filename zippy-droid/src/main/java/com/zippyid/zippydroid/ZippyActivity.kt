@@ -55,9 +55,9 @@ class ZippyActivity : AppCompatActivity() {
     private var encodedDocumentFrontImage: String? = null
     private var encodedDocumentBackImage: String? = null
 
-    private var faceImage: Bitmap? = null
-    private var documentFrontImage: Bitmap? = null
-    private var documentBackImage: Bitmap? = null
+    public var faceImage: Bitmap? = null
+    public var documentFrontImage: Bitmap? = null
+    public var documentBackImage: Bitmap? = null
 
     private var faceOrientation = 0
     private var documentFrontOrientation = 0
@@ -108,17 +108,17 @@ class ZippyActivity : AppCompatActivity() {
             ZippyState.READY -> {
                 faceImage = image.toBitmap()
                 faceOrientation = imageOrientation
-                faceImage?.let { switchToPhotoConfirmation(it, CameraMode.FACE) }
+                faceImage?.let { switchToPhotoConfirmation(CameraMode.FACE) }
             }
             ZippyState.FACE_TAKEN -> {
                 documentFrontImage = image.toBitmap()
                 documentFrontOrientation = imageOrientation
-                documentFrontImage?.let { switchToPhotoConfirmation(it, CameraMode.DOCUMENT_FRONT) }
+                documentFrontImage?.let { switchToPhotoConfirmation(CameraMode.DOCUMENT_FRONT) }
             }
             ZippyState.DOC_FRONT_TAKEN -> {
                 documentBackImage = image.toBitmap()
                 documentBackOrientation = imageOrientation
-                documentBackImage?.let { switchToPhotoConfirmation(it, CameraMode.DOCUMENT_BACK) }
+                documentBackImage?.let { switchToPhotoConfirmation(CameraMode.DOCUMENT_BACK) }
             }
             else -> throw IllegalStateException("Unknown state after capture! Crashing...")
         }
@@ -217,12 +217,8 @@ class ZippyActivity : AppCompatActivity() {
         Log.d("ZIPPY", "Switched to ID verification!")
     }
 
-    private fun switchToPhotoConfirmation(bitmapImage: Bitmap, mode: CameraMode) {
-        var stream = ByteArrayOutputStream()
-        bitmapImage.compress(Bitmap.CompressFormat.PNG, 100, stream)
-        var byteArray = stream.toByteArray()
-
-        supportFragmentManager.beginTransaction().replace(R.id.fragment_container_fl, PhotoConfirmationFragment.newInstance(mode, byteArray)).commit()
+    private fun switchToPhotoConfirmation(mode: CameraMode) {
+        supportFragmentManager.beginTransaction().replace(R.id.fragment_container_fl, PhotoConfirmationFragment.newInstance(mode)).commit()
         Log.d("ZIPPY", "Switched to Photo confirmation!")
     }
 }

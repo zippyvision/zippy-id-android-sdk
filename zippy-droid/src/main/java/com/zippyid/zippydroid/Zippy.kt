@@ -1,7 +1,7 @@
 package com.zippyid.zippydroid
 
 object Zippy {
-    const val host = "https://demo.zippyid.com/api"
+    const val host = "https://app.zippyid.com/api"
     lateinit var key: String
         private set
     lateinit var secret: String

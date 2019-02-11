@@ -1,15 +1,10 @@
 package com.zippyid.zippydroid.wizard
 
-import android.graphics.Color
 import android.os.Bundle
 import android.support.v4.app.Fragment
-import android.text.Spannable
-import android.text.SpannableString
-import android.text.style.ForegroundColorSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import com.android.volley.AuthFailureError
 import com.android.volley.VolleyError
 import com.zippyid.zippydroid.R
