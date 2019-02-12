@@ -186,12 +186,10 @@ class CameraFragment : Fragment() {
         val image = reader.acquireNextImage()
 
         val manager = activity?.getSystemService(Context.CAMERA_SERVICE) as CameraManager
-        val characteristics = manager.getCameraCharacteristics(cameraId)
 
-        val imageOrientation =
-            getImageOrientation(characteristics, activity!!.windowManager.defaultDisplay.rotation)
+        val rotation = activity?.windowManager?.defaultDisplay?.rotation
 
-        (activity as ZippyActivity).onCaptureCompleted(image, imageOrientation)
+        (activity as ZippyActivity).onCaptureCompleted(image, getOrientation(rotation!!))
     }
 
     /**
@@ -696,10 +694,6 @@ class CameraFragment : Fragment() {
                 CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE
             )
             setAutoFlash(captureBuilder)
-
-            // Orientation
-            val rotation = activity?.windowManager?.defaultDisplay?.rotation ?: return
-            captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, getOrientation(rotation))
 
             val captureCallback = object : CameraCaptureSession.CaptureCallback() {
 

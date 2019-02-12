@@ -10,9 +10,9 @@ import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import com.android.volley.VolleyError
 import com.zippyid.zippydroid.camera.CameraFragment
-import com.zippyid.zippydroid.extension.resizeAndRotate
-import com.zippyid.zippydroid.extension.toBitmap
-import com.zippyid.zippydroid.extension.toEncodedPng
+import com.zippyid.zippydroid.extension.resize
+import com.zippyid.zippydroid.extension.rotate
+import com.zippyid.zippydroid.extension.*
 import com.zippyid.zippydroid.network.ApiClient
 import com.zippyid.zippydroid.network.AsyncResponse
 import com.zippyid.zippydroid.network.model.DocumentType
@@ -21,7 +21,6 @@ import com.zippyid.zippydroid.network.model.ZippyResponse
 import com.zippyid.zippydroid.wizard.IDVertificationFragment
 import com.zippyid.zippydroid.wizard.PhotoConfirmationFragment
 import com.zippyid.zippydroid.wizard.WizardFragment
-import java.io.ByteArrayOutputStream
 
 class ZippyActivity : AppCompatActivity() {
     companion object {
@@ -55,9 +54,9 @@ class ZippyActivity : AppCompatActivity() {
     private var encodedDocumentFrontImage: String? = null
     private var encodedDocumentBackImage: String? = null
 
-    public var faceImage: Bitmap? = null
-    public var documentFrontImage: Bitmap? = null
-    public var documentBackImage: Bitmap? = null
+    var faceImage: Bitmap? = null
+    var documentFrontImage: Bitmap? = null
+    var documentBackImage: Bitmap? = null
 
     private var faceOrientation = 0
     private var documentFrontOrientation = 0
@@ -108,16 +107,19 @@ class ZippyActivity : AppCompatActivity() {
             ZippyState.READY -> {
                 faceImage = image.toBitmap()
                 faceOrientation = imageOrientation
+                faceImage = faceImage!!.rotate(faceOrientation)
                 faceImage?.let { switchToPhotoConfirmation(CameraMode.FACE) }
             }
             ZippyState.FACE_TAKEN -> {
                 documentFrontImage = image.toBitmap()
                 documentFrontOrientation = imageOrientation
+                documentFrontImage = documentFrontImage!!.rotate(documentFrontOrientation)
                 documentFrontImage?.let { switchToPhotoConfirmation(CameraMode.DOCUMENT_FRONT) }
             }
             ZippyState.DOC_FRONT_TAKEN -> {
                 documentBackImage = image.toBitmap()
                 documentBackOrientation = imageOrientation
+                documentBackImage = documentBackImage!!.rotate(documentBackOrientation)
                 documentBackImage?.let { switchToPhotoConfirmation(CameraMode.DOCUMENT_BACK) }
             }
             else -> throw IllegalStateException("Unknown state after capture! Crashing...")
@@ -132,9 +134,9 @@ class ZippyActivity : AppCompatActivity() {
             return
         }
 
-        encodedFaceImage = faceImage!!.resizeAndRotate(faceOrientation)!!.toEncodedPng()
-        encodedDocumentFrontImage = documentFrontImage!!.resizeAndRotate(documentFrontOrientation)!!.toEncodedPng()
-        encodedDocumentBackImage = documentBackImage?.resizeAndRotate(documentBackOrientation)?.toEncodedPng()
+        encodedFaceImage = faceImage!!.resize()!!.toEncodedPng()
+        encodedDocumentFrontImage = documentFrontImage!!.resize()!!.toEncodedPng()
+        encodedDocumentBackImage = documentBackImage?.resize()?.toEncodedPng()
 
         apiClient.sendImages(documentType.value, encodedFaceImage!!, encodedDocumentFrontImage!!, encodedDocumentBackImage, sessionConfiguration.customerId!!, object : AsyncResponse<Any?> {
             override fun onSuccess(response: Any?) {

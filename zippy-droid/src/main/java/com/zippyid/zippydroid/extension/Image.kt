@@ -14,10 +14,8 @@ fun Image.toBitmap(): Bitmap? {
     return BitmapFactory.decodeByteArray(bytes, 0, bytes.size) ?: null
 }
 
-fun Bitmap.resizeAndRotate(imageOrientation: Int): Bitmap? {
+fun Bitmap.resize(): Bitmap? {
     Log.d("IMAGE", "Original size: w:$width, h:$height")
-
-    val matrix = Matrix()
 
     val imageRatio = width.toFloat() / height
 
@@ -28,6 +26,22 @@ fun Bitmap.resizeAndRotate(imageOrientation: Int): Bitmap? {
 
     return resizedBitmap
 }
+
+fun Bitmap.rotate(imageOrientation: Int): Bitmap? {
+    Log.d("IMAGE", "Original size: w:$width, h:$height")
+
+    val matrix = Matrix()
+
+    matrix.postRotate(imageOrientation.toFloat())
+
+    val rotatedBitmap = Bitmap.createBitmap(this, 0, 0, this.width, this.height, matrix, true)
+
+    recycle()
+
+    return rotatedBitmap
+}
+
+
 
 fun Bitmap.toEncodedPng(): String {
     val bos = ByteArrayOutputStream()
