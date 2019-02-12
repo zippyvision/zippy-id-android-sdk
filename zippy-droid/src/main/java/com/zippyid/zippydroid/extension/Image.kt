@@ -19,18 +19,14 @@ fun Bitmap.resizeAndRotate(imageOrientation: Int): Bitmap? {
 
     val matrix = Matrix()
 
-    matrix.postRotate(imageOrientation.toFloat())
-
     val imageRatio = width.toFloat() / height
 
     val resizedBitmap = Bitmap.createScaledBitmap(this, (600 * imageRatio).toInt(), 600, false)
     Log.d("IMAGE", "Resized size: w:${resizedBitmap.width}, h:${resizedBitmap.height}")
-    val rotatedBitmap = Bitmap.createBitmap(resizedBitmap, 0, 0, resizedBitmap.width, resizedBitmap.height, matrix, true)
 
-    resizedBitmap.recycle()
     recycle()
 
-    return rotatedBitmap
+    return resizedBitmap
 }
 
 fun Bitmap.toEncodedPng(): String {

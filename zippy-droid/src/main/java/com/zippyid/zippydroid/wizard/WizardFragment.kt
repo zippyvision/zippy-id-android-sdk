@@ -113,6 +113,7 @@ class WizardFragment : Fragment() {
                 docBackOkLabelTv.visibility = View.VISIBLE
                 zippyBtn.text = "Send info!"
                 zippyBtn.setOnClickListener {
+                    zippyBtn.setEnabled(false)
                     (activity as ZippyActivity).sendImages(apiClient, documentType)
                     sendingOkLabelTv.visibility = View.VISIBLE
                     zippyBtn.text = "Processing..."
