@@ -75,7 +75,7 @@ class ZippyActivity : AppCompatActivity() {
     }
 
     fun onWizardNextStep(mode: CameraMode) {
-        switchToCamera(mode, documentType)
+        switchToCamera(mode)
     }
 
     fun onIDVerificationNextStep(documentType: DocumentType) {
@@ -99,7 +99,7 @@ class ZippyActivity : AppCompatActivity() {
     }
 
     fun onPhotoConfirmationTakeNewPhotoStep(mode: CameraMode) {
-        switchToCamera(mode, documentType)
+        switchToCamera(mode)
     }
 
     fun onCaptureCompleted(image: Image, imageOrientation: Int) {
@@ -204,7 +204,7 @@ class ZippyActivity : AppCompatActivity() {
         finish()
     }
 
-    private fun switchToCamera(mode: CameraMode, documentType: DocumentType) {
+    private fun switchToCamera(mode: CameraMode) {
         supportFragmentManager.beginTransaction().replace(R.id.fragment_container_fl, CameraFragment.newInstance(mode, documentType)).commit()
         Log.d("ZIPPY", "Switched to camera!")
     }
@@ -220,7 +220,7 @@ class ZippyActivity : AppCompatActivity() {
     }
 
     private fun switchToPhotoConfirmation(mode: CameraMode) {
-        supportFragmentManager.beginTransaction().replace(R.id.fragment_container_fl, PhotoConfirmationFragment.newInstance(mode)).commit()
+        supportFragmentManager.beginTransaction().replace(R.id.fragment_container_fl, PhotoConfirmationFragment.newInstance(mode, documentType)).commit()
         Log.d("ZIPPY", "Switched to Photo confirmation!")
     }
 }

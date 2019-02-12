@@ -1,7 +1,6 @@
 package com.zippyid.zippydroid.wizard
 
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.os.Bundle
 import android.support.v4.app.Fragment;
@@ -12,17 +11,21 @@ import com.zippyid.zippydroid.Zippy
 import com.zippyid.zippydroid.network.ApiClient
 import com.zippyid.zippydroid.R
 import com.zippyid.zippydroid.ZippyActivity
+import com.zippyid.zippydroid.network.model.DocumentType
 import kotlinx.android.synthetic.main.fragment_photo_confirmation.*
 
 class PhotoConfirmationFragment: Fragment()  {
     companion object {
         private const val CAMERA_MODE = "camera_mode"
+        private const val DOCUMENT_TYPE = "document_type"
 
         fun newInstance(
-            mode: ZippyActivity.CameraMode
+            mode: ZippyActivity.CameraMode,
+            documentType: DocumentType?
         ): PhotoConfirmationFragment {
             val bundle = Bundle()
             bundle.putSerializable(PhotoConfirmationFragment.CAMERA_MODE, mode)
+            bundle.putParcelable(PhotoConfirmationFragment.DOCUMENT_TYPE, documentType)
             val fragment = PhotoConfirmationFragment()
             fragment.arguments = bundle
             return fragment
@@ -30,6 +33,7 @@ class PhotoConfirmationFragment: Fragment()  {
     }
 
     private lateinit var mode: ZippyActivity.CameraMode
+    private lateinit var documentType: DocumentType
     private lateinit var apiClient: ApiClient
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -43,6 +47,9 @@ class PhotoConfirmationFragment: Fragment()  {
         mode = arguments?.getSerializable(PhotoConfirmationFragment.CAMERA_MODE) as? ZippyActivity.CameraMode
             ?: throw IllegalArgumentException("Mode was not passed to PhotoConfirmationFragment!")
 
+        documentType = arguments?.getParcelable(PhotoConfirmationFragment.DOCUMENT_TYPE) as? DocumentType
+            ?: throw IllegalArgumentException("Document type was not passed to CameraFragment!")
+
         adjustForMode()
 
         isReadableBtn.setOnClickListener {
@@ -54,6 +61,8 @@ class PhotoConfirmationFragment: Fragment()  {
     }
 
     fun adjustForMode() {
+        var documentTypeLabel: String? = if (documentType.value == "id_card") documentType.label else documentType.label!!.toLowerCase()
+
         when(mode) {
             ZippyActivity.CameraMode.FACE -> {
                 descriptionTv.text = "Make sure your face is recognizable, with no blur or glare"
@@ -61,14 +70,14 @@ class PhotoConfirmationFragment: Fragment()  {
                 photoIv.setImageBitmap((activity as ZippyActivity).faceImage)
             }
             ZippyActivity.CameraMode.DOCUMENT_FRONT -> {
-                descriptionTv.text = "Make sure your license details are clear to read, with no blur or glare"
-                isReadableBtn.text = "My license ir readable"
+                descriptionTv.text = "Make sure your ${documentTypeLabel} details are clear to read, with no blur or glare"
+                isReadableBtn.text = "My ${documentTypeLabel} ir readable"
                 photoIv.setImageBitmap((activity as ZippyActivity).documentFrontImage)
 
             }
             ZippyActivity.CameraMode.DOCUMENT_BACK -> {
-                descriptionTv.text = "Make sure your license details are clear to read, with no blur or glare"
-                isReadableBtn.text = "My license ir readable"
+                descriptionTv.text = "Make sure your ${documentTypeLabel} details are clear to read, with no blur or glare"
+                isReadableBtn.text = "My ${documentTypeLabel} ir readable"
                 photoIv.setImageBitmap((activity as ZippyActivity).documentBackImage)
 
             }
