@@ -117,6 +117,7 @@ class WizardFragment : Fragment() {
                     (activity as ZippyActivity).sendImages(apiClient, documentType)
                     sendingOkLabelTv.visibility = View.VISIBLE
                     zippyBtn.text = "Processing..."
+                    progressBar.visibility = View.VISIBLE
                 }
             }
         }
