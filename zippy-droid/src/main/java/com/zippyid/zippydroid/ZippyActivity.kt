@@ -17,6 +17,7 @@ import com.zippyid.zippydroid.network.ApiClient
 import com.zippyid.zippydroid.network.AsyncResponse
 import com.zippyid.zippydroid.network.model.DocumentType
 import com.zippyid.zippydroid.network.model.SessionConfig
+import com.zippyid.zippydroid.network.model.ZippyCallback
 import com.zippyid.zippydroid.network.model.ZippyResponse
 import com.zippyid.zippydroid.wizard.IDVertificationFragment
 import com.zippyid.zippydroid.wizard.PhotoConfirmationFragment
@@ -142,6 +143,7 @@ class ZippyActivity : AppCompatActivity() {
             override fun onSuccess(response: Any?) {
                 state = ZippyState.DONE
                 pollJobStatus(apiClient, null)
+                Zippy.zippyCallback.onSubmit()
             }
 
             override fun onError(error: VolleyError) {
@@ -173,6 +175,7 @@ class ZippyActivity : AppCompatActivity() {
 
                     when {
                         !response?.state.isNullOrEmpty() && response?.state != "processing"-> {
+                            Zippy.zippyCallback.onFinished()
                             setResult(Activity.RESULT_OK, returnIntent)
                             finish()
                         }
