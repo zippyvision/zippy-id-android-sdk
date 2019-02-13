@@ -9,7 +9,7 @@ object Zippy {
         private set
     var customerUid: Int = -1
     internal var isInitialized = false
-    lateinit var zippyCallback: ZippyCallback
+    var zippyCallback: ZippyCallback? = null
 
     @JvmStatic
     fun initialize(key: String, secret: String, customerUid: Int = -1) {
