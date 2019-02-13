@@ -305,10 +305,10 @@ class CameraFragment : Fragment() {
 
         startBackgroundThread()
 
-        if (textureView.isAvailable) {
-            openCamera(textureView.width, textureView.height)
+        if (cameraTextureView.isAvailable) {
+            openCamera(cameraTextureView.width, cameraTextureView.height)
         } else {
-            textureView.surfaceTextureListener = mSurfaceTextureListener
+            cameraTextureView.surfaceTextureListener = mSurfaceTextureListener
         }
 
         takePictureBtn.setOnClickListener {
@@ -413,18 +413,18 @@ class CameraFragment : Fragment() {
     }
 
     private fun showFaceFrame() {
-        faceFrameCl.visibility = View.VISIBLE
-        documentFrontFrameCl.visibility = View.INVISIBLE
-        documentBackFrameCl.visibility = View.INVISIBLE
+        faceFrameLl.visibility = View.VISIBLE
+        documentFrontFrameLl.visibility = View.INVISIBLE
+        documentBackFrameLl.visibility = View.INVISIBLE
 
         titleTv.text = ""
         descriptionTv.text = ""
     }
 
     private fun showDocumentFrontFrame(documentType: DocumentType) {
-        faceFrameCl.visibility = View.INVISIBLE
-        documentFrontFrameCl.visibility = View.VISIBLE
-        documentBackFrameCl.visibility = View.INVISIBLE
+        faceFrameLl.visibility = View.INVISIBLE
+        documentFrontFrameLl.visibility = View.VISIBLE
+        documentBackFrameLl.visibility = View.INVISIBLE
 
         when (documentType.value) {
             "passport" -> {
@@ -443,9 +443,9 @@ class CameraFragment : Fragment() {
     }
 
     private fun showDocumentBackFrame(documentType: DocumentType) {
-        faceFrameCl.visibility = View.INVISIBLE
-        documentFrontFrameCl.visibility = View.INVISIBLE
-        documentBackFrameCl.visibility = View.VISIBLE
+        faceFrameLl.visibility = View.INVISIBLE
+        documentFrontFrameLl.visibility = View.INVISIBLE
+        documentBackFrameLl.visibility = View.VISIBLE
 
         when (documentType.value) {
             "drivers_licence" -> {
@@ -461,7 +461,7 @@ class CameraFragment : Fragment() {
 
 
     private fun configureTransform(viewWidth: Int, viewHeight: Int) {
-        if (null == textureView || null == previewSize) {
+        if (null == cameraTextureView || null == previewSize) {
             return
         }
         val rotation = activity?.windowManager?.defaultDisplay?.rotation
@@ -484,7 +484,7 @@ class CameraFragment : Fragment() {
             matrix.postRotate(180f, centerX, centerY)
             Log.d("TEST", "ROTATE: ${180}")
         }
-        textureView.setTransform(matrix)
+        cameraTextureView.setTransform(matrix)
     }
 
     private fun setUpCameraOutputs(width: Int, height: Int, cameraModeId: String, manager: CameraManager) {
@@ -565,11 +565,11 @@ class CameraFragment : Fragment() {
             // We fit the aspect ratio of TextureView to the size of preview we picked.
             val orientation = resources.configuration.orientation
             if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                textureView.setAspectRatio(
+                cameraTextureView.setAspectRatio(
                     previewSize!!.width, previewSize!!.height
                 )
             } else {
-                textureView.setAspectRatio(
+                cameraTextureView.setAspectRatio(
                     previewSize!!.height, previewSize!!.width
                 )
             }
@@ -592,8 +592,8 @@ class CameraFragment : Fragment() {
     }
 
     private fun chooseOptimalSize(
-        choices: Array<Size>, textureViewWidth: Int,
-        textureViewHeight: Int, maxWidth: Int, maxHeight: Int, aspectRatio: Size
+        choices: Array<Size>, cameraTextureViewWidth: Int,
+        cameraTextureViewHeight: Int, maxWidth: Int, maxHeight: Int, aspectRatio: Size
     ): Size {
 
         // Collect the supported resolutions that are at least as big as the preview Surface
@@ -606,7 +606,7 @@ class CameraFragment : Fragment() {
             if (option.width <= maxWidth && option.height <= maxHeight &&
                 option.height == option.width * h / w
             ) {
-                if (option.width >= textureViewWidth && option.height >= textureViewHeight) {
+                if (option.width >= cameraTextureViewWidth && option.height >= cameraTextureViewHeight) {
                     bigEnough.add(option)
                 } else {
                     notBigEnough.add(option)
@@ -762,7 +762,7 @@ class CameraFragment : Fragment() {
      */
     private fun createCameraPreviewSession() {
         try {
-            val texture = textureView.surfaceTexture!!
+            val texture = cameraTextureView.surfaceTexture!!
 
             // We configure the size of default buffer to be the size of camera preview we want.
             texture.setDefaultBufferSize(previewSize!!.width, previewSize!!.height)
