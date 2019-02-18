@@ -23,10 +23,12 @@ import android.widget.Toast
 import com.zippyid.zippydroid.R
 import com.zippyid.zippydroid.ZippyActivity
 import com.zippyid.zippydroid.network.model.DocumentType
+import android.hardware.camera2.params.Face
 import kotlinx.android.synthetic.main.fragment_camera.*
 import java.util.*
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
+import kotlin.collections.ArrayList
 
 class CameraFragment : Fragment() {
 
@@ -164,6 +166,9 @@ class CameraFragment : Fragment() {
      */
     private var imageReader: ImageReader? = null
 
+    private var mFaceDetectSupported: Boolean = false
+
+    private var mFaceDetectMode: Int? = null
 
     private val mSurfaceTextureListener = object : TextureView.SurfaceTextureListener {
         override fun onSurfaceTextureAvailable(texture: SurfaceTexture, width: Int, height: Int) {
@@ -240,7 +245,11 @@ class CameraFragment : Fragment() {
         private fun process(result: CaptureResult) {
             when (state) {
                 STATE_PREVIEW -> {
-                }// We have nothing to do when the camera preview is working normally.
+                    val faces: Array<Face> = result.get(CaptureResult.STATISTICS_FACES)
+                    if (faces.size == 1) {
+                        takePicture()
+                    }
+                }
                 STATE_WAITING_LOCK -> {
                     val afState = result.get(CaptureResult.CONTROL_AF_STATE)
                     if (afState == null || afState == 0) {
@@ -578,6 +587,22 @@ class CameraFragment : Fragment() {
             val available = characteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE)
             flashSupported = available ?: false
 
+            val FD = characteristics.get(CameraCharacteristics.STATISTICS_INFO_AVAILABLE_FACE_DETECT_MODES)
+            val maxFD = characteristics.get(CameraCharacteristics.STATISTICS_INFO_MAX_FACE_COUNT)
+
+            if (FD.size > 0 && cameraModeId == "1") {
+                val fdList = ArrayList<Int>()
+                for (FaceD in FD) {
+                    fdList.add(FaceD)
+                    Log.e(TAG, "setUpCameraOutputs: FD type:" + Integer.toString(FaceD))
+                }
+                Log.e(TAG, "setUpCameraOutputs: FD count" + Integer.toString(maxFD))
+                if (maxFD > 0) {
+                    mFaceDetectSupported = true
+                    mFaceDetectMode = Collections.max(fdList)
+                }
+            }
+
             this.cameraId = if(manager.cameraIdList.contains(cameraModeId)) cameraModeId else cameraId
                 
             return
@@ -795,6 +820,7 @@ class CameraFragment : Fragment() {
                             )
                             // Flash is automatically enabled when necessary.
                             setAutoFlash(previewRequestBuilder!!)
+                            setFaceDetect(previewRequestBuilder!!, mFaceDetectMode)
 
                             // Finally, we start displaying the camera preview.
                             previewRequest = previewRequestBuilder!!.build()
@@ -835,6 +861,12 @@ class CameraFragment : Fragment() {
                 CaptureRequest.CONTROL_AE_MODE,
                 CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH
             )
+        }
+    }
+
+    private fun setFaceDetect(requestBuilder: CaptureRequest.Builder, faceDetectMode: Int?) {
+        if (faceDetectMode != null && mFaceDetectSupported) {
+            requestBuilder.set(CaptureRequest.STATISTICS_FACE_DETECT_MODE, faceDetectMode)
         }
     }
 
