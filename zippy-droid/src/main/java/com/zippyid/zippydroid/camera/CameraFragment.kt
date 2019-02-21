@@ -190,8 +190,6 @@ class CameraFragment : Fragment() {
     private val mOnImageAvailableListener = ImageReader.OnImageAvailableListener { reader ->
         val image = reader.acquireNextImage()
 
-        val manager = activity?.getSystemService(Context.CAMERA_SERVICE) as CameraManager
-
         val rotation = activity?.windowManager?.defaultDisplay?.rotation
 
         (activity as ZippyActivity).onCaptureCompleted(image, getOrientation(rotation!!))
@@ -245,8 +243,8 @@ class CameraFragment : Fragment() {
         private fun process(result: CaptureResult) {
             when (state) {
                 STATE_PREVIEW -> {
-                    val faces: Array<Face> = result.get(CaptureResult.STATISTICS_FACES)
-                    if (faces.size == 1) {
+                    val faces: Array<Face>? = result.get(CaptureResult.STATISTICS_FACES)
+                    if (faces?.size == 1) {
                         takePicture()
                     }
                 }
