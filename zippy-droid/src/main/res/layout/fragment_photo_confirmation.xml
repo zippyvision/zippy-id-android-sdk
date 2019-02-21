@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                                             xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+                                             xmlns:tools="http://schemas.android.com/tools"
+                                             android:layout_width="match_parent"
                                              android:layout_height="match_parent"
                                              xmlns:app="http://schemas.android.com/apk/res-auto">
     <ImageView
             android:id="@+id/photoIv"
             android:layout_width="match_parent"
-            android:layout_height="200dp"
-            android:layout_marginTop="50dp" android:layout_marginStart="50dp" android:layout_marginEnd="50dp"
+            android:layout_height="400dp"
+            android:layout_marginTop="50dp" android:layout_marginStart="24dp" android:layout_marginEnd="24dp"
             app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" />
     <TextView
             android:id="@+id/descriptionTv"
@@ -15,7 +16,7 @@
             android:layout_width="match_parent"
             android:text="Make sure your license details are clear to read, with no blur or glare"
             android:gravity="center_horizontal"
-            android:textSize="15sp"
+            android:textSize="16sp"
             android:layout_marginTop="16dp" android:layout_marginStart="50dp" android:layout_marginEnd="50dp"
             app:layout_constraintTop_toBottomOf="@+id/photoIv"/>
 
@@ -26,9 +27,13 @@
             android:text="My license is readable"
             android:textAllCaps="false"
             android:textColor="@android:color/white"
-            android:backgroundTint="@android:color/holo_orange_dark"
-            android:layout_marginTop="50dp" android:layout_marginBottom="15dp" android:layout_marginStart="50dp" android:layout_marginEnd="50dp"
-            app:layout_constraintBottom_toTopOf="@+id/takePhotoBtn"/>
+            android:background="@drawable/custom_button_orange"
+            android:layout_marginBottom="15dp"
+            android:layout_marginEnd="50dp"
+            app:layout_constraintBottom_toTopOf="@+id/takePhotoBtn"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="50dp"/>
 
     <Button
             android:id="@+id/takePhotoBtn"
@@ -37,8 +42,12 @@
             android:text="Take a new picture"
             android:textAllCaps="false"
             android:textColor="@android:color/holo_orange_dark"
-            android:backgroundTint="#FFFBF7"
-            android:layout_marginTop="15dp" android:layout_marginBottom="15dp" android:layout_marginStart="50dp" android:layout_marginEnd="50dp"
-            app:layout_constraintBottom_toBottomOf="parent"/>
+            android:background="@drawable/custom_button_gray"
+            android:layout_marginBottom="32dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="50dp"
+            android:layout_marginEnd="50dp"/>
 
 </android.support.constraint.ConstraintLayout>

@@ -13,7 +13,7 @@ class ZippyDemoApplication : Application() {
             "0e1f18ff5fca8a9f0d971dd0b8e0dce0"
         )
 
-        var callback: ZippyCallback = object:ZippyCallback {
+        val callback: ZippyCallback = object:ZippyCallback {
             override fun onSubmit() {
                 //  fired, tad kad ir uploadotas visas bildes
             }

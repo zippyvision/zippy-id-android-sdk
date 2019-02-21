@@ -8,7 +8,6 @@ object Zippy {
     lateinit var secret: String
         private set
     var customerUid: Int = -1
-    internal var isInitialized = false
     var zippyCallback: ZippyCallback? = null
 
     @JvmStatic
@@ -16,7 +15,6 @@ object Zippy {
         this.key = key
         this.secret = secret
         this.customerUid = customerUid
-        isInitialized = true
     }
 
     @JvmStatic
