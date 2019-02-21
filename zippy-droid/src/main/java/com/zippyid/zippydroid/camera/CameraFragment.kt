@@ -676,6 +676,12 @@ class CameraFragment : Fragment() {
      * Initiate a still image capture.
      */
     private fun takePicture() {
+        activity?.runOnUiThread{
+            if (cameraProgressBar != null && whiteBackground != null) {
+                whiteBackground.visibility = View.VISIBLE
+                cameraProgressBar.visibility = View.VISIBLE
+            }
+        }
         lockFocus()
     }
 
