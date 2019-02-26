@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.util.Log
 import com.android.volley.VolleyError
 import com.zippyid.zippydroid.camera.CameraFragment
+import com.zippyid.zippydroid.camera.face_tracker.CameraActivityFragment
 import com.zippyid.zippydroid.extension.resize
 import com.zippyid.zippydroid.extension.rotate
 import com.zippyid.zippydroid.extension.*
@@ -206,8 +207,13 @@ class ZippyActivity : AppCompatActivity() {
         finish()
     }
 
+//    private fun switchToCamera(mode: CameraMode) {
+//        supportFragmentManager.beginTransaction().replace(R.id.fragment_container_fl, CameraFragment.newInstance(mode, documentType)).commit()
+//        Log.d("ZIPPY", "Switched to camera!")
+//    }
+
     private fun switchToCamera(mode: CameraMode) {
-        supportFragmentManager.beginTransaction().replace(R.id.fragment_container_fl, CameraFragment.newInstance(mode, documentType)).commit()
+        supportFragmentManager.beginTransaction().replace(R.id.fragment_container_fl, CameraActivityFragment.newInstance(mode, documentType)).commit()
         Log.d("ZIPPY", "Switched to camera!")
     }
 
