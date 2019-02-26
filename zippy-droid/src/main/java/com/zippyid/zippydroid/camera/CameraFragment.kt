@@ -7,14 +7,13 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
-import android.media.ExifInterface
+import androidx.exifinterface.media.ExifInterface
 import android.os.Build
 import android.os.Bundle
+import android.util.DisplayMetrics
 import androidx.core.app.ActivityCompat
 import android.util.Log
-import android.util.SparseIntArray
 import android.view.LayoutInflater
-import android.view.Surface
 import android.view.View
 import android.view.ViewGroup
 
@@ -52,15 +51,6 @@ class CameraFragment : Fragment(), GraphicFaceTracker.FaceDetectorListener {
 
         private const val CAMERA_MODE = "camera_mode"
         private const val DOCUMENT_TYPE = "document_type"
-
-        private val ORIENTATIONS = SparseIntArray()
-
-        init {
-            ORIENTATIONS.append(Surface.ROTATION_0, 90)
-            ORIENTATIONS.append(Surface.ROTATION_90, 0)
-            ORIENTATIONS.append(Surface.ROTATION_180, 270)
-            ORIENTATIONS.append(Surface.ROTATION_270, 180)
-        }
 
         fun newInstance(
             mode: ZippyActivity.CameraMode,
@@ -123,16 +113,6 @@ class CameraFragment : Fragment(), GraphicFaceTracker.FaceDetectorListener {
             ActivityCompat.requestPermissions(activity!!, permissions, RC_HANDLE_CAMERA_PERM)
             return
         }
-
-        val listener = View.OnClickListener {
-            ActivityCompat.requestPermissions(activity!!, permissions,
-                RC_HANDLE_CAMERA_PERM)
-        }
-
-//        Snackbar.make(mGraphicOverlay!!, "Access to the camera is needed for detection",
-//            Snackbar.LENGTH_INDEFINITE)
-//            .setAction("Ok", listener)
-//            .show()
     }
 
     private fun createCameraSource() {
@@ -223,10 +203,9 @@ class CameraFragment : Fragment(), GraphicFaceTracker.FaceDetectorListener {
                 try {
                     var loadedImage: Bitmap?
                     loadedImage = BitmapFactory.decodeByteArray(data, 0, data.size)
+                    var rotatedImage: Bitmap?
 
                     var exifInterface: ExifInterface?
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        var rotatedBitmap: Bitmap?
                         var byteArrayInputStream = ByteArrayInputStream(data)
                         exifInterface = ExifInterface(byteArrayInputStream)
                         var rotationDegrees = 0F
@@ -243,12 +222,8 @@ class CameraFragment : Fragment(), GraphicFaceTracker.FaceDetectorListener {
                             } }
                         var rotateMatrix = Matrix()
                         rotateMatrix.postRotate(rotationDegrees)
-                        rotatedBitmap = Bitmap.createBitmap(loadedImage, 0, 0, loadedImage.width, loadedImage.height, rotateMatrix, false)
-                        (activity as ZippyActivity).onCaptureCompleted(rotatedBitmap)
-                    } else {
-                        (activity as ZippyActivity).onCaptureCompleted(loadedImage)
-
-                    }
+                        rotatedImage = Bitmap.createBitmap(loadedImage, 0, 0, loadedImage.width, loadedImage.height, rotateMatrix, false)
+                        (activity as ZippyActivity).onCaptureCompleted(rotatedImage)
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
