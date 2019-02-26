@@ -2,19 +2,14 @@ package com.zippyid.zippydroid.camera
 
 import android.Manifest
 import android.app.AlertDialog
-import android.content.Context
 import android.content.DialogInterface
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.Camera
 import android.graphics.Matrix
-import android.hardware.camera2.CameraCharacteristics
-import android.hardware.camera2.CameraManager
 import android.media.ExifInterface
 import android.os.Build
 import android.os.Bundle
-import com.google.android.material.snackbar.Snackbar
 import androidx.core.app.ActivityCompat
 import android.util.Log
 import android.util.SparseIntArray
@@ -22,10 +17,8 @@ import android.view.LayoutInflater
 import android.view.Surface
 import android.view.View
 import android.view.ViewGroup
-import androidx.annotation.RequiresApi
 
 import com.zippyid.zippydroid.camera.helpers.CameraSourcePreview
-import com.zippyid.zippydroid.camera.helpers.GraphicOverlay
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.vision.CameraSource
@@ -41,12 +34,17 @@ import com.zippyid.zippydroid.ZippyActivity
 import com.zippyid.zippydroid.network.model.DocumentType
 
 import com.zippyid.zippydroid.R
+import com.zippyid.zippydroid.camera.helpers.GraphicFaceTracker
 import com.zippyid.zippydroid.camera.helpers.GraphicFaceTrackerFactory
 import kotlinx.android.synthetic.main.fragment_camera.*
 import java.io.ByteArrayInputStream
 
 
-class CameraFragment : Fragment() {
+class CameraFragment : Fragment(), GraphicFaceTracker.FaceDetectorListener {
+    override fun onFaceDetected(face: Face) {
+        takePhoto()
+    }
+
     companion object {
         private val TAG = "FaceTracker"
         private val RC_HANDLE_GMS = 9001
@@ -79,8 +77,6 @@ class CameraFragment : Fragment() {
 
     private var mCameraSource: CameraSource? = null
     private var mPreview: CameraSourcePreview? = null
-    private var mGraphicOverlay: GraphicOverlay? = null
-
     private var cameraId = CameraSource.CAMERA_FACING_FRONT
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -99,6 +95,7 @@ class CameraFragment : Fragment() {
         if (mode == ZippyActivity.CameraMode.FACE) {
             showFaceFrame()
             cameraId = CameraSource.CAMERA_FACING_FRONT
+            GraphicFaceTracker.mFaceDetectorListener = this
         } else if (mode == ZippyActivity.CameraMode.DOCUMENT_FRONT) {
             showDocumentFrontFrame(documentType)
             cameraId = CameraSource.CAMERA_FACING_BACK
@@ -108,7 +105,7 @@ class CameraFragment : Fragment() {
         }
 
         mPreview = cameraSourcePreview as CameraSourcePreview
-        mGraphicOverlay = faceOverlay as GraphicOverlay
+
         val rc = ActivityCompat.checkSelfPermission(context!!, Manifest.permission.CAMERA)
         if (rc == PackageManager.PERMISSION_GRANTED) {
             createCameraSource()
@@ -132,10 +129,10 @@ class CameraFragment : Fragment() {
                 RC_HANDLE_CAMERA_PERM)
         }
 
-        Snackbar.make(mGraphicOverlay!!, "Access to the camera is needed for detection",
-            Snackbar.LENGTH_INDEFINITE)
-            .setAction("Ok", listener)
-            .show()
+//        Snackbar.make(mGraphicOverlay!!, "Access to the camera is needed for detection",
+//            Snackbar.LENGTH_INDEFINITE)
+//            .setAction("Ok", listener)
+//            .show()
     }
 
     private fun createCameraSource() {
@@ -144,7 +141,7 @@ class CameraFragment : Fragment() {
             .setMode(FaceDetector.ACCURATE_MODE)
             .build()
         detector.setProcessor(
-            MultiProcessor.Builder<Face>(mGraphicOverlay?.let { GraphicFaceTrackerFactory(it) })
+            MultiProcessor.Builder<Face>(GraphicFaceTrackerFactory())
                 .build())
 
         mCameraSource = CameraSource.Builder(context, detector)
@@ -209,7 +206,7 @@ class CameraFragment : Fragment() {
 
         if (mCameraSource != null) {
             try {
-                mGraphicOverlay?.let { mPreview!!.start(mCameraSource!!, it) }
+                mPreview!!.start(mCameraSource!!)
             } catch (e: IOException) {
                 Log.e(TAG, "Unable to start camera source.", e)
                 mCameraSource!!.release()

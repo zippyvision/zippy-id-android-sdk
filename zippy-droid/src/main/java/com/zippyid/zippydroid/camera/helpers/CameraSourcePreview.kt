@@ -1,11 +1,8 @@
 package com.zippyid.zippydroid.camera.helpers
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.pm.PackageManager
 import android.content.res.Configuration
-import androidx.core.app.ActivityCompat
 import android.util.AttributeSet
 import android.util.Log
 import android.view.SurfaceHolder
@@ -21,7 +18,6 @@ class CameraSourcePreview(private val mContext: Context, attrs: AttributeSet) : 
     private var mStartRequested: Boolean = false
     private var mSurfaceAvailable: Boolean = false
     private var mCameraSource: CameraSource? = null
-    private var mOverlay: GraphicOverlay? = null
 
     private val isPortraitMode: Boolean
         get() {
@@ -56,22 +52,9 @@ class CameraSourcePreview(private val mContext: Context, attrs: AttributeSet) : 
         }
     }
 
-    @Throws(IOException::class)
-    fun start(cameraSource: CameraSource, overlay: GraphicOverlay) {
-        mOverlay = overlay
-        start(cameraSource)
-    }
-
     fun stop() {
         if (mCameraSource != null) {
             mCameraSource!!.stop()
-        }
-    }
-
-    fun release() {
-        if (mCameraSource != null) {
-            mCameraSource!!.release()
-            mCameraSource = null
         }
     }
 
@@ -79,28 +62,7 @@ class CameraSourcePreview(private val mContext: Context, attrs: AttributeSet) : 
     @Throws(IOException::class)
     private fun startIfReady() {
         if (mStartRequested && mSurfaceAvailable) {
-            if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
-                return
-            }
             mCameraSource!!.start(mSurfaceView.holder)
-            if (mOverlay != null) {
-                val size = mCameraSource!!.previewSize
-                val min = Math.min(size.width, size.height)
-                val max = Math.max(size.width, size.height)
-                if (isPortraitMode) {
-                    mOverlay!!.setCameraInfo(min, max, mCameraSource!!.cameraFacing)
-                } else {
-                    mOverlay!!.setCameraInfo(max, min, mCameraSource!!.cameraFacing)
-                }
-                mOverlay!!.clear()
-            }
             mStartRequested = false
         }
     }

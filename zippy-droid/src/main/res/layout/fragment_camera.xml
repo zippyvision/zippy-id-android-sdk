@@ -15,16 +15,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintBottom_toTopOf="@id/takePictureBtn"
             app:layout_constraintTop_toTopOf="parent" >
-
-        <com.zippyid.zippydroid.camera.helpers.GraphicOverlay
-                android:id="@+id/faceOverlay"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintBottom_toTopOf="@id/takePictureBtn"
-                app:layout_constraintTop_toTopOf="parent" />
-
     </com.zippyid.zippydroid.camera.helpers.CameraSourcePreview>
 
     <LinearLayout
