@@ -6,7 +6,7 @@ import android.graphics.Bitmap
 import android.media.Image
 import android.os.Bundle
 import android.os.Handler
-import android.support.v7.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatActivity
 import android.util.Log
 import com.android.volley.VolleyError
 import com.zippyid.zippydroid.camera.CameraFragment

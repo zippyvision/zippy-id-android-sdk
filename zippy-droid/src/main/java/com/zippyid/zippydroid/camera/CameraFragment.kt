@@ -12,9 +12,9 @@ import android.media.ImageReader
 import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
-import android.support.v4.app.DialogFragment
-import android.support.v4.app.Fragment
-import android.support.v4.content.ContextCompat
+import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.Fragment
+import androidx.core.content.ContextCompat
 import android.util.Log
 import android.util.Size
 import android.util.SparseIntArray
