@@ -3,7 +3,6 @@ package com.zippyid.zippydroid
 import android.app.Activity
 import android.content.Intent
 import android.graphics.Bitmap
-import android.media.Image
 import android.os.Bundle
 import android.os.Handler
 import androidx.appcompat.app.AppCompatActivity
@@ -11,7 +10,6 @@ import android.util.Log
 import com.android.volley.VolleyError
 import com.zippyid.zippydroid.camera.CameraFragment
 import com.zippyid.zippydroid.extension.resize
-import com.zippyid.zippydroid.extension.rotate
 import com.zippyid.zippydroid.extension.*
 import com.zippyid.zippydroid.network.ApiClient
 import com.zippyid.zippydroid.network.AsyncResponse
@@ -57,11 +55,6 @@ class ZippyActivity : AppCompatActivity() {
     var faceImage: Bitmap? = null
     var documentFrontImage: Bitmap? = null
     var documentBackImage: Bitmap? = null
-
-    private var faceOrientation = 0
-    private var documentFrontOrientation = 0
-    private var documentBackOrientation = 0
-
 
     var state = ZippyState.LOADING
     private lateinit var documentType: DocumentType
