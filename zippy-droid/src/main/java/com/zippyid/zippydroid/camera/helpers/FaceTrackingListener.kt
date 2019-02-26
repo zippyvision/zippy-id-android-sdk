@@ -1,4 +1,4 @@
-package com.zippyid.zippydroid.camera.face_tracker
+package com.zippyid.zippydroid.camera.helpers
 
 interface FaceTrackingListener {
     fun onFaceLeftMove()
@@ -9,5 +9,4 @@ interface FaceTrackingListener {
     fun onEyeCloseError()
     fun onMouthOpenError()
     fun onMultipleFaceError()
-
 }

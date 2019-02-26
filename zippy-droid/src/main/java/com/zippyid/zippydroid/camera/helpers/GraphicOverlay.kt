@@ -1,4 +1,4 @@
-package com.zippyid.zippydroid.camera.face_tracker
+package com.zippyid.zippydroid.camera.helpers
 
 import android.content.Context
 import android.graphics.Canvas

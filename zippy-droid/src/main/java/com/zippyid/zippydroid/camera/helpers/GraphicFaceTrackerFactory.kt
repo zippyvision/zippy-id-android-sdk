@@ -1,6 +1,4 @@
-package com.zippyid.zippydroid.camera.face_tracker
-
-import com.zippyid.zippydroid.camera.face_tracker.GraphicOverlay
+package com.zippyid.zippydroid.camera.helpers
 
 import com.google.android.gms.vision.MultiProcessor
 import com.google.android.gms.vision.Tracker

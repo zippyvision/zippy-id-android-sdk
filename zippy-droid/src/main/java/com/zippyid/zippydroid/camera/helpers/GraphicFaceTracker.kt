@@ -1,7 +1,6 @@
-package com.zippyid.zippydroid.camera.face_tracker
+package com.zippyid.zippydroid.camera.helpers
 
-import com.zippyid.zippydroid.camera.face_tracker.GraphicOverlay
-
+import com.zippyid.zippydroid.camera.helpers.GraphicOverlay
 import com.google.android.gms.vision.Detector
 import com.google.android.gms.vision.Tracker
 import com.google.android.gms.vision.face.Face
@@ -18,16 +17,15 @@ class GraphicFaceTracker internal constructor(private val mOverlay: GraphicOverl
 
     override fun onNewItem(faceId: Int, item: Face?) {
         mFaceGraphic.setId(faceId)
+
     }
 
     override fun onUpdate(p0: Detector.Detections<Face>?, face: Face?) {
         mOverlay.add(mFaceGraphic)
+
         face?.let { mFaceGraphic.updateFace(it) }
         //        logFaceData(face);
     }
-
-
-
 
     override fun onMissing(p0: Detector.Detections<Face>?) {
         mOverlay.remove(mFaceGraphic)

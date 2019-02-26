@@ -10,7 +10,6 @@ import androidx.appcompat.app.AppCompatActivity
 import android.util.Log
 import com.android.volley.VolleyError
 import com.zippyid.zippydroid.camera.CameraFragment
-import com.zippyid.zippydroid.camera.face_tracker.CameraActivityFragment
 import com.zippyid.zippydroid.extension.resize
 import com.zippyid.zippydroid.extension.rotate
 import com.zippyid.zippydroid.extension.*
@@ -103,24 +102,18 @@ class ZippyActivity : AppCompatActivity() {
         switchToCamera(mode)
     }
 
-    fun onCaptureCompleted(image: Image, imageOrientation: Int) {
+    fun onCaptureCompleted(image: Bitmap) {
         when (state) {
             ZippyState.READY -> {
-                faceImage = image.toBitmap()
-                faceOrientation = imageOrientation
-                faceImage = faceImage!!.rotate(faceOrientation)
+                faceImage = image
                 faceImage?.let { switchToPhotoConfirmation(CameraMode.FACE) }
             }
             ZippyState.FACE_TAKEN -> {
-                documentFrontImage = image.toBitmap()
-                documentFrontOrientation = imageOrientation
-                documentFrontImage = documentFrontImage!!.rotate(documentFrontOrientation)
+                documentFrontImage = image
                 documentFrontImage?.let { switchToPhotoConfirmation(CameraMode.DOCUMENT_FRONT) }
             }
             ZippyState.DOC_FRONT_TAKEN -> {
-                documentBackImage = image.toBitmap()
-                documentBackOrientation = imageOrientation
-                documentBackImage = documentBackImage!!.rotate(documentBackOrientation)
+                documentBackImage = image
                 documentBackImage?.let { switchToPhotoConfirmation(CameraMode.DOCUMENT_BACK) }
             }
             else -> throw IllegalStateException("Unknown state after capture! Crashing...")
@@ -207,13 +200,8 @@ class ZippyActivity : AppCompatActivity() {
         finish()
     }
 
-//    private fun switchToCamera(mode: CameraMode) {
-//        supportFragmentManager.beginTransaction().replace(R.id.fragment_container_fl, CameraFragment.newInstance(mode, documentType)).commit()
-//        Log.d("ZIPPY", "Switched to camera!")
-//    }
-
     private fun switchToCamera(mode: CameraMode) {
-        supportFragmentManager.beginTransaction().replace(R.id.fragment_container_fl, CameraActivityFragment.newInstance(mode, documentType)).commit()
+        supportFragmentManager.beginTransaction().replace(R.id.fragment_container_fl, CameraFragment.newInstance(mode, documentType)).commit()
         Log.d("ZIPPY", "Switched to camera!")
     }
 

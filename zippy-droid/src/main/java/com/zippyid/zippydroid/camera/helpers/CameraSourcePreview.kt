@@ -1,4 +1,4 @@
-package com.zippyid.zippydroid.camera.face_tracker
+package com.zippyid.zippydroid.camera.helpers
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -12,7 +12,6 @@ import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.view.ViewGroup
 
-import com.google.android.gms.common.images.Size
 import com.google.android.gms.vision.CameraSource
 
 import java.io.IOException

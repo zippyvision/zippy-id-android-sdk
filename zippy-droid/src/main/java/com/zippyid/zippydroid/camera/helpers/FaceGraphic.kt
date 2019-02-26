@@ -1,13 +1,12 @@
-package com.zippyid.zippydroid.camera.face_tracker
+package com.zippyid.zippydroid.camera.helpers
 
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.util.Log
 
-import com.zippyid.zippydroid.camera.face_tracker.FaceTrackingListener
-import com.zippyid.zippydroid.camera.face_tracker.GraphicOverlay
-
+import com.zippyid.zippydroid.camera.helpers.FaceTrackingListener
+import com.zippyid.zippydroid.camera.helpers.GraphicOverlay
 import com.google.android.gms.vision.face.Face
 
 
@@ -43,35 +42,35 @@ internal class FaceGraphic(overlay: GraphicOverlay) : GraphicOverlay.Graphic(ove
         postInvalidate()
         logFaceData(mFace, object : FaceTrackingListener {
             override fun onFaceLeftMove() {
-                Log.e(TAG, "onFaceLeftMove")
+
             }
 
             override fun onFaceRightMove() {
-                Log.e(TAG, "onFaceRightMove")
+
             }
 
             override fun onFaceUpMove() {
-                Log.e(TAG, "onFaceUpMove")
+
             }
 
             override fun onFaceDownMove() {
-                Log.e(TAG, "onFaceDownMove")
+
             }
 
             override fun onGoodSmile() {
-                Log.e(TAG, "onGoodSmile")
+
             }
 
             override fun onEyeCloseError() {
-                Log.e(TAG, "onEyeCloseError")
+
             }
 
             override fun onMouthOpenError() {
-                Log.e(TAG, "onMouthOpenError")
+
             }
 
             override fun onMultipleFaceError() {
-                Log.e(TAG, "onMultipleFaceError")
+
             }
         })
     }
@@ -124,7 +123,6 @@ internal class FaceGraphic(overlay: GraphicOverlay) : GraphicOverlay.Graphic(ove
     }
 
     companion object {
-        private val TAG = "!!FaceGraphic!!"
         private val FACE_POSITION_RADIUS = 10.0f
         private val ID_TEXT_SIZE = 40.0f
         private val ID_Y_OFFSET = 50.0f
