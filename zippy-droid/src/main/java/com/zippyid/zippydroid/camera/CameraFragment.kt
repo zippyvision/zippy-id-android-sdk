@@ -148,6 +148,7 @@ class CameraFragment : Fragment(), GraphicFaceTracker.FaceDetectorListener {
             .setRequestedPreviewSize(640, 480)
             .setFacing(cameraId)
             .setRequestedFps(10.0f)
+            .setAutoFocusEnabled(true)
             .build()
     }
 
