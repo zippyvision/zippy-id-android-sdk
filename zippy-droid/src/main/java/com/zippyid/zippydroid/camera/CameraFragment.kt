@@ -8,7 +8,6 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import androidx.exifinterface.media.ExifInterface
-import android.os.Build
 import android.os.Bundle
 import android.util.DisplayMetrics
 import androidx.core.app.ActivityCompat
@@ -25,13 +24,10 @@ import com.google.android.gms.vision.MultiProcessor
 import com.google.android.gms.vision.face.Face
 import com.google.android.gms.vision.face.FaceDetector
 import androidx.fragment.app.Fragment
-
 import java.io.IOException
 import java.lang.Exception
-
 import com.zippyid.zippydroid.ZippyActivity
 import com.zippyid.zippydroid.network.model.DocumentType
-
 import com.zippyid.zippydroid.R
 import com.zippyid.zippydroid.camera.helpers.GraphicFaceTracker
 import com.zippyid.zippydroid.camera.helpers.GraphicFaceTrackerFactory
@@ -202,7 +198,13 @@ class CameraFragment : Fragment(), GraphicFaceTracker.FaceDetectorListener {
             override fun onPictureTaken(data: ByteArray) {
                 try {
                     var loadedImage: Bitmap?
-                    loadedImage = BitmapFactory.decodeByteArray(data, 0, data.size)
+
+                    var bitmapFactoryOpt = BitmapFactory.Options()
+                    bitmapFactoryOpt.inDensity = DisplayMetrics.DENSITY_DEFAULT
+                    bitmapFactoryOpt.inTargetDensity = DisplayMetrics.DENSITY_DEFAULT
+                    bitmapFactoryOpt.inScaled = false
+
+                    loadedImage = BitmapFactory.decodeByteArray(data, 0, data.size, bitmapFactoryOpt)
                     var rotatedImage: Bitmap?
 
                     var exifInterface: ExifInterface?

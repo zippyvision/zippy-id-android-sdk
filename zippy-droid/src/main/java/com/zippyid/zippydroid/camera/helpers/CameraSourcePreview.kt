@@ -86,32 +86,51 @@ class CameraSourcePreview(private val mContext: Context, attrs: AttributeSet) : 
     }
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
-        var width = 320
-        var height = 240
+        var previewWidth = 640
+        var previewHeight = 480
         if (mCameraSource != null) {
             val size = mCameraSource!!.previewSize
             if (size != null) {
-                width = size.width
-                height = size.height
+                previewWidth = size.width
+                previewHeight = size.height
             }
         }
         if (isPortraitMode) {
-            val tmp = width
-            width = height
-            height = tmp
+            val tmp = previewWidth
+            previewWidth = previewHeight
+            previewHeight = tmp
         }
 
-        val layoutWidth = right - left
-        val layoutHeight = bottom - top
-        var childWidth = layoutWidth
-        var childHeight = (layoutWidth.toFloat() / width.toFloat() * height).toInt()
-        if (childHeight > layoutHeight) {
-            childHeight = layoutHeight
-            childWidth = (layoutHeight.toFloat() / height.toFloat() * width).toInt()
+        val viewWidth = right - left
+        val viewHeight = bottom - top
+
+        var childWidth: Int?
+        var childHeight: Int?
+
+        var childXOffset = 0
+        var childYOffset = 0
+
+        var widthRatio: Float = viewWidth.toFloat() / previewWidth.toFloat()
+        var heightRatio: Float = viewHeight.toFloat() / previewHeight.toFloat()
+
+        if (widthRatio > heightRatio) {
+            childWidth = viewWidth
+            childHeight = (previewHeight * widthRatio).toInt()
+            childYOffset = (childHeight - viewWidth) / 2
+
+        } else {
+            childWidth = (previewWidth * heightRatio).toInt()
+            childHeight = viewHeight
+            childXOffset = (childWidth - viewWidth) / 2
         }
+
+        var l = -1 * childXOffset
+        var t = -1 * childYOffset
+        var r = childWidth - childXOffset
+        var b = childHeight - childYOffset
 
         for (i in 0 until childCount) {
-            getChildAt(i).layout(0, 0, childWidth, childHeight)
+            getChildAt(i).layout(l, t, r, b)
         }
 
         try {
