@@ -41,9 +41,9 @@ class CameraFragment : Fragment(), GraphicFaceTracker.FaceDetectorListener {
     }
 
     companion object {
-        private val TAG = "FaceTracker"
-        private val RC_HANDLE_GMS = 9001
-        private val RC_HANDLE_CAMERA_PERM = 2
+        private const val TAG = "FaceTracker"
+        private const val RC_HANDLE_GMS = 9001
+        private const val RC_HANDLE_CAMERA_PERM = 2
 
         private const val CAMERA_MODE = "camera_mode"
         private const val DOCUMENT_TYPE = "document_type"
@@ -140,28 +140,27 @@ class CameraFragment : Fragment(), GraphicFaceTracker.FaceDetectorListener {
 
     override fun onDestroy() {
         super.onDestroy()
-        if (mCameraSource != null) {
-            mCameraSource!!.release()
-        }
+
+        mCameraSource?.release()
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
 
         if (requestCode != RC_HANDLE_CAMERA_PERM) {
-            Log.d(TAG, "Got unexpected permission result: " + requestCode)
+            Log.d(TAG, "Got unexpected permission result: $requestCode")
             super.onRequestPermissionsResult(requestCode, permissions, grantResults)
             return
         }
 
-        if (grantResults.size != 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             Log.d(TAG, "Camera permission granted - initialize the camera source")
             createCameraSource()
             return
         }
 
         Log.e(TAG, "Permission not granted: results len = " + grantResults.size +
-                " Result code = " + if (grantResults.size > 0) grantResults[0] else "(empty)")
+                " Result code = " + if (grantResults.isNotEmpty()) grantResults[0] else "(empty)")
 
         val listener = DialogInterface.OnClickListener { dialog, id -> onStop() }
 
@@ -192,43 +191,40 @@ class CameraFragment : Fragment(), GraphicFaceTracker.FaceDetectorListener {
         }
     }
 
-    fun takePhoto() {
-        var callback: CameraSource.PictureCallback = object: CameraSource.PictureCallback {
+    private fun takePhoto() {
+        val callback: CameraSource.PictureCallback = CameraSource.PictureCallback { data ->
+            try {
+                val loadedImage: Bitmap?
 
-            override fun onPictureTaken(data: ByteArray) {
-                try {
-                    var loadedImage: Bitmap?
+                val bitmapFactoryOpt = BitmapFactory.Options()
+                bitmapFactoryOpt.inDensity = DisplayMetrics.DENSITY_DEFAULT
+                bitmapFactoryOpt.inTargetDensity = DisplayMetrics.DENSITY_DEFAULT
+                bitmapFactoryOpt.inScaled = false
 
-                    var bitmapFactoryOpt = BitmapFactory.Options()
-                    bitmapFactoryOpt.inDensity = DisplayMetrics.DENSITY_DEFAULT
-                    bitmapFactoryOpt.inTargetDensity = DisplayMetrics.DENSITY_DEFAULT
-                    bitmapFactoryOpt.inScaled = false
+                loadedImage = BitmapFactory.decodeByteArray(data, 0, data.size, bitmapFactoryOpt)
+                val rotatedImage: Bitmap?
 
-                    loadedImage = BitmapFactory.decodeByteArray(data, 0, data.size, bitmapFactoryOpt)
-                    var rotatedImage: Bitmap?
-
-                    var exifInterface: ExifInterface?
-                        var byteArrayInputStream = ByteArrayInputStream(data)
-                        exifInterface = ExifInterface(byteArrayInputStream)
-                        var rotationDegrees = 0F
-                        var orientation = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION, 1)
-                        when (orientation) {
-                            ExifInterface.ORIENTATION_ROTATE_90 -> {
-                                rotationDegrees = 90F
-                            }
-                            ExifInterface.ORIENTATION_ROTATE_180 -> {
-                                rotationDegrees = 180F
-                            }
-                            ExifInterface.ORIENTATION_ROTATE_270 -> {
-                                rotationDegrees = 270F
-                            } }
-                        var rotateMatrix = Matrix()
-                        rotateMatrix.postRotate(rotationDegrees)
-                        rotatedImage = Bitmap.createBitmap(loadedImage, 0, 0, loadedImage.width, loadedImage.height, rotateMatrix, false)
-                        (activity as ZippyActivity).onCaptureCompleted(rotatedImage)
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
+                val exifInterface: ExifInterface?
+                val byteArrayInputStream = ByteArrayInputStream(data)
+                exifInterface = ExifInterface(byteArrayInputStream)
+                var rotationDegrees = 0F
+                val orientation = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION, 1)
+                when (orientation) {
+                    ExifInterface.ORIENTATION_ROTATE_90 -> {
+                        rotationDegrees = 90F
+                    }
+                    ExifInterface.ORIENTATION_ROTATE_180 -> {
+                        rotationDegrees = 180F
+                    }
+                    ExifInterface.ORIENTATION_ROTATE_270 -> {
+                        rotationDegrees = 270F
+                    } }
+                val rotateMatrix = Matrix()
+                rotateMatrix.postRotate(rotationDegrees)
+                rotatedImage = Bitmap.createBitmap(loadedImage, 0, 0, loadedImage.width, loadedImage.height, rotateMatrix, false)
+                (activity as ZippyActivity).onCaptureCompleted(rotatedImage)
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
         mCameraSource!!.takePicture(null, callback)
@@ -249,17 +245,17 @@ class CameraFragment : Fragment(), GraphicFaceTracker.FaceDetectorListener {
         documentBackFrameLl.visibility = View.INVISIBLE
 
         when (documentType.value) {
-            "passport" -> {
-                titleTv.text = "Passport"
-                descriptionTv.text = "Position your passport in the frame"
+            ZippyActivity.DocumentMode.PASSPORT.value -> {
+                titleTv.text = getString(R.string.passport)
+                descriptionTv.text = getString(R.string.position_passport_text)
             }
-            "drivers_licence" -> {
-                titleTv.text = "Front of driver's license"
-                descriptionTv.text = "Position the front of your license in the frame"
+            ZippyActivity.DocumentMode.DRIVERS_LICENCE.value -> {
+                titleTv.text = getString(R.string.driver_license_front)
+                descriptionTv.text = getString(R.string.position_driver_license_front)
             }
-            "id_card" -> {
-                titleTv.text = "Front of ID card"
-                descriptionTv.text = "Position the front of your ID card in the frame"
+            ZippyActivity.DocumentMode.ID_CARD.value -> {
+                titleTv.text = getString(R.string.id_card_front)
+                descriptionTv.text = getString(R.string.position_id_card_front)
             }
         }
     }
@@ -270,13 +266,13 @@ class CameraFragment : Fragment(), GraphicFaceTracker.FaceDetectorListener {
         documentBackFrameLl.visibility = View.VISIBLE
 
         when (documentType.value) {
-            "drivers_licence" -> {
-                titleTv.text = "Back of driver's license"
-                descriptionTv.text = "Position the back of your license in the frame"
+            ZippyActivity.DocumentMode.DRIVERS_LICENCE.value -> {
+                titleTv.text = getString(R.string.driver_license_back)
+                descriptionTv.text = getString(R.string.position_driver_license_back)
             }
-            "id_card" -> {
-                titleTv.text = "Back of ID card"
-                descriptionTv.text = "Position the back of your ID card in the frame"
+            ZippyActivity.DocumentMode.ID_CARD.value -> {
+                titleTv.text = getString(R.string.id_card_back)
+                descriptionTv.text = getString(R.string.position_id_card_back)
             }
         }
     }

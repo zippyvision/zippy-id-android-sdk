@@ -2,4 +2,21 @@
     <string name="app_name">ZippyDroid</string>
     <string name="request_permission">This app needs camera permission.</string>
     <string name="camera_error">This device doesn\'t support Camera2 API.</string>
+    <string name="label_preparing_btn">Preparing...</string>
+    <string name="label_ok">OK</string>
+    <string name="label_sending">Sending:</string>
+    <string name="label_document_back">Document back:</string>
+    <string name="label_document_front">Document front:</string>
+    <string name="label_face">Face:</string>
+    <string name="label_preparing">Preparing:</string>
+    <string name="passport">Passport</string>
+    <string name="position_passport_text">Position your passport in the frame</string>
+    <string name="driver_license_front">Front of driver\'s license</string>
+    <string name="position_driver_license_front">Position the front of your license in the frame</string>
+    <string name="id_card_front">Front of ID card</string>
+    <string name="position_id_card_front">Position the front of your ID card in the frame</string>
+    <string name="driver_license_back">Back of driver\'s license</string>
+    <string name="id_card_back">Back of ID card</string>
+    <string name="position_driver_license_back">Position the back of your license in the frame</string>
+    <string name="position_id_card_back">Position the back of your ID card in the frame</string>
 </resources>
