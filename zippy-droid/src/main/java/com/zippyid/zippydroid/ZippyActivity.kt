@@ -3,15 +3,13 @@ package com.zippyid.zippydroid
 import android.app.Activity
 import android.content.Intent
 import android.graphics.Bitmap
-import android.media.Image
 import android.os.Bundle
 import android.os.Handler
-import android.support.v7.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatActivity
 import android.util.Log
 import com.android.volley.VolleyError
 import com.zippyid.zippydroid.camera.CameraFragment
 import com.zippyid.zippydroid.extension.resize
-import com.zippyid.zippydroid.extension.rotate
 import com.zippyid.zippydroid.extension.*
 import com.zippyid.zippydroid.network.ApiClient
 import com.zippyid.zippydroid.network.AsyncResponse
@@ -58,11 +56,6 @@ class ZippyActivity : AppCompatActivity() {
     var documentFrontImage: Bitmap? = null
     var documentBackImage: Bitmap? = null
 
-    private var faceOrientation = 0
-    private var documentFrontOrientation = 0
-    private var documentBackOrientation = 0
-
-
     var state = ZippyState.LOADING
     private lateinit var documentType: DocumentType
     private lateinit var sessionConfiguration: SessionConfig
@@ -102,24 +95,18 @@ class ZippyActivity : AppCompatActivity() {
         switchToCamera(mode)
     }
 
-    fun onCaptureCompleted(image: Image, imageOrientation: Int) {
+    fun onCaptureCompleted(image: Bitmap) {
         when (state) {
             ZippyState.READY -> {
-                faceImage = image.toBitmap()
-                faceOrientation = imageOrientation
-                faceImage = faceImage!!.rotate(faceOrientation)
+                faceImage = image
                 faceImage?.let { switchToPhotoConfirmation(CameraMode.FACE) }
             }
             ZippyState.FACE_TAKEN -> {
-                documentFrontImage = image.toBitmap()
-                documentFrontOrientation = imageOrientation
-                documentFrontImage = documentFrontImage!!.rotate(documentFrontOrientation)
+                documentFrontImage = image
                 documentFrontImage?.let { switchToPhotoConfirmation(CameraMode.DOCUMENT_FRONT) }
             }
             ZippyState.DOC_FRONT_TAKEN -> {
-                documentBackImage = image.toBitmap()
-                documentBackOrientation = imageOrientation
-                documentBackImage = documentBackImage!!.rotate(documentBackOrientation)
+                documentBackImage = image
                 documentBackImage?.let { switchToPhotoConfirmation(CameraMode.DOCUMENT_BACK) }
             }
             else -> throw IllegalStateException("Unknown state after capture! Crashing...")
@@ -142,6 +129,7 @@ class ZippyActivity : AppCompatActivity() {
             override fun onSuccess(response: Any?) {
                 state = ZippyState.DONE
                 pollJobStatus(apiClient, null)
+                Zippy.zippyCallback?.onSubmit()
             }
 
             override fun onError(error: VolleyError) {
@@ -173,6 +161,7 @@ class ZippyActivity : AppCompatActivity() {
 
                     when {
                         !response?.state.isNullOrEmpty() && response?.state != "processing"-> {
+                            Zippy.zippyCallback?.onFinished()
                             setResult(Activity.RESULT_OK, returnIntent)
                             finish()
                         }

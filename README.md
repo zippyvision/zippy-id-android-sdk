@@ -43,19 +43,25 @@ package com.zippyid.zippydroid
 import android.app.Application
 import com.zippyid.zippydroid.Zippy
 
-class ZippyApplication : Application() {
-    override fun onCreate() {
-        super.onCreate()
+...
 
-        Zippy.initialize(
-            key: key,
-            secret: secret
-        )
-    }
-}
+Zippy.initialize(
+    key: key,
+    secret: secret
+)
 ```
 
 You can access the `key` and `secret` variables by going to [ZippyID admin panel](https://demo.zippyid.com/#/api_integrations) and creating a new API integration
+
+You can also pass an integer value for `customer_uid` adding it's argument in the initialization as follows
+
+```Kotlin
+Zippy.initialize(
+    key: key,
+    secret: secret,
+    customerUid: customer_uid
+)
+```
 
 ### Usage
 
@@ -73,7 +79,7 @@ startActivityForResult(intent, ZIPPY_RESULT_CODE)
 
 ### Results
 
-To receive the user's results, just call the method `onActivityResult(requestCode: Int, resultCode: Int, data: Intent?)`. Your desired data is stored in as an Intent.
+To receive the user's results, call the method `onActivityResult(requestCode: Int, resultCode: Int, data: Intent?)`. Your desired data is stored in as an Intent.
 
 ```Kotlin
 override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -91,3 +97,23 @@ override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) 
 If the session was successful `resultCode` is -1 (Activity.RESULT_OK) and `result` contains the sessions result.
 
 If there was an error `resultCode` is 0 (Activity.RESULT_CANCELLED) and `error` contains the error message.
+
+### Optional callback
+
+If you want you can use 3 additional functions by creating a `ZippyCallback` callback
+
+```Kotlin
+var callback: ZippyCallback = object:ZippyCallback {
+    override fun onSubmit() {
+        // called when all images are sent
+    }
+    override fun onTextExtracted() {
+        // called when API receives a result
+    }
+    override fun onFinished() {
+        // called when all is finished
+    }
+}
+
+Zippy.createCallback(callback)
+```

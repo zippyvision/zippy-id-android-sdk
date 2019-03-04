@@ -1,9 +1,7 @@
 package com.zippyid.zippydroid.wizard
 
-import android.graphics.Bitmap
-import android.graphics.Matrix
 import android.os.Bundle
-import android.support.v4.app.Fragment;
+import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -82,12 +80,5 @@ class PhotoConfirmationFragment: Fragment()  {
 
             }
         }
-    }
-
-    fun rotateImage(bitmap: Bitmap): Bitmap {
-        var matrix = Matrix()
-        matrix.postRotate(-90F)
-        var scaledBitmap = Bitmap.createScaledBitmap(bitmap, bitmap.width, bitmap.height, true)
-        return Bitmap.createBitmap(scaledBitmap, 0, 0, scaledBitmap.width, scaledBitmap.height, matrix, true)
     }
 }

@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                                             xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
-                                             android:layout_height="match_parent"
-                                             xmlns:app="http://schemas.android.com/apk/res-auto">
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                                            android:layout_width="match_parent"
+                                            android:layout_height="match_parent"
+                                            xmlns:app="http://schemas.android.com/apk/res-auto">
     <TextView
             android:id="@+id/preparingLabelTv"
             android:layout_width="wrap_content"
             android:layout_height="25dp"
-            android:text="Preparing:"
+            android:text="@string/label_preparing"
             android:textSize="17sp"
             android:textColor="@android:color/black"
             android:layout_marginTop="50dp" android:layout_marginStart="50dp" android:layout_marginEnd="50dp"
             app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" />
     <TextView
-            android:text="OK"
+            android:text="@string/label_ok"
             android:layout_width="wrap_content"
             android:layout_height="25dp"
             android:id="@+id/preparingOkLabelTv" app:layout_constraintStart_toEndOf="@+id/preparingLabelTv"
@@ -28,14 +28,14 @@
             android:id="@+id/faceLabelTv"
             android:layout_width="wrap_content"
             android:layout_height="25dp"
-            android:text="Face:"
+            android:text="@string/label_face"
             android:textSize="17sp"
             android:textColor="@android:color/black"
             android:layout_marginTop="20dp"
             app:layout_constraintStart_toStartOf="@+id/preparingLabelTv"
             app:layout_constraintTop_toBottomOf="@+id/preparingLabelTv"/>
     <TextView
-            android:text="OK"
+            android:text="@string/label_ok"
             android:layout_width="wrap_content"
             android:layout_height="25dp"
             android:id="@+id/faceOkLabelTv" app:layout_constraintStart_toEndOf="@+id/faceLabelTv"
@@ -50,14 +50,14 @@
             android:id="@+id/documentFrontLabelTv"
             android:layout_width="wrap_content"
             android:layout_height="25dp"
-            android:text="Document front:"
+            android:text="@string/label_document_front"
             android:textSize="17sp"
             android:textColor="@android:color/black"
             android:layout_marginTop="20dp"
             app:layout_constraintStart_toStartOf="@+id/faceLabelTv"
             app:layout_constraintTop_toBottomOf="@+id/faceLabelTv" />
     <TextView
-            android:text="OK"
+            android:text="@string/label_ok"
             android:layout_width="wrap_content"
             android:layout_height="25dp"
             android:id="@+id/docFrontOkLabelTv" app:layout_constraintStart_toEndOf="@+id/documentFrontLabelTv"
@@ -72,14 +72,14 @@
             android:id="@+id/documentBackLabelTv"
             android:layout_width="wrap_content"
             android:layout_height="25dp"
-            android:text="Document back:"
+            android:text="@string/label_document_back"
             android:textSize="17sp"
             android:textColor="@android:color/black"
             android:layout_marginTop="20dp"
             app:layout_constraintStart_toStartOf="@+id/documentFrontLabelTv"
             app:layout_constraintTop_toBottomOf="@+id/documentFrontLabelTv"/>
     <TextView
-            android:text="OK"
+            android:text="@string/label_ok"
             android:layout_width="wrap_content"
             android:layout_height="25dp"
             android:id="@+id/docBackOkLabelTv" app:layout_constraintStart_toEndOf="@+id/documentBackLabelTv"
@@ -94,14 +94,14 @@
             android:id="@+id/sendingLabelTv"
             android:layout_width="wrap_content"
             android:layout_height="25dp"
-            android:text="Sending:"
+            android:text="@string/label_sending"
             android:textSize="17sp"
             android:textColor="@android:color/black"
             android:layout_marginTop="20dp"
             app:layout_constraintStart_toStartOf="@+id/documentBackLabelTv"
             app:layout_constraintTop_toBottomOf="@+id/documentBackLabelTv"/>
     <TextView
-            android:text="OK"
+            android:text="@string/label_ok"
             android:layout_width="wrap_content"
             android:layout_height="25dp"
             android:id="@+id/sendingOkLabelTv" app:layout_constraintStart_toEndOf="@+id/sendingLabelTv"
@@ -115,11 +115,23 @@
             android:id="@+id/zippyBtn"
             android:layout_height="50dp"
             android:layout_width="match_parent"
-            android:text="Preparing..."
+            android:text="@string/label_preparing_btn"
             android:textColor="@android:color/white"
             android:textAllCaps="false"
-            android:background="@drawable/custom_button"
-            android:layout_marginTop="40dp" android:layout_marginStart="50dp" android:layout_marginEnd="50dp"
-            app:layout_constraintStart_toStartOf="@+id/sendingLabelTv" app:layout_constraintTop_toBottomOf="@+id/sendingLabelTv" />
+            android:background="@drawable/custom_button_orange"
+            android:layout_marginBottom="50dp" android:layout_marginStart="50dp" android:layout_marginEnd="50dp"
+            app:layout_constraintStart_toStartOf="@+id/sendingLabelTv" app:layout_constraintBottom_toBottomOf="parent" />
 
-</android.support.constraint.ConstraintLayout>
+    <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:indeterminate="true"
+            android:visibility="invisible"
+            android:indeterminateTint="@android:color/holo_orange_dark"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
