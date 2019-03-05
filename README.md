@@ -25,11 +25,11 @@ allprojects {
 
 and in your app's build gradle add the dependency
 
-`implementation 'com.github.mak-it:zippyid-sdk-android:0.1.2'`
+`implementation 'com.github.zippyvision:zippy-id-android-sdk:0.1.3'`
 
 ```
 dependencies {
-   implementation 'com.github.mak-it:zippyid-sdk-android:0.1.2'
+   implementation 'com.github.zippyvision:zippy-id-android-sdk:0.1.3'
 }
 ```
 
