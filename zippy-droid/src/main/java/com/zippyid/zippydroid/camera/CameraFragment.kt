@@ -16,7 +16,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 
-import com.zippyid.zippydroid.camera.helpers.CameraSourcePreview
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.vision.CameraSource
@@ -24,19 +23,23 @@ import com.google.android.gms.vision.MultiProcessor
 import com.google.android.gms.vision.face.Face
 import com.google.android.gms.vision.face.FaceDetector
 import androidx.fragment.app.Fragment
+import com.google.android.gms.vision.barcode.Barcode
+import com.google.android.gms.vision.barcode.BarcodeDetector
 import java.io.IOException
 import java.lang.Exception
 import com.zippyid.zippydroid.ZippyActivity
 import com.zippyid.zippydroid.network.model.DocumentType
 import com.zippyid.zippydroid.R
-import com.zippyid.zippydroid.camera.helpers.GraphicFaceTracker
-import com.zippyid.zippydroid.camera.helpers.GraphicFaceTrackerFactory
+import com.zippyid.zippydroid.camera.helpers.*
 import kotlinx.android.synthetic.main.fragment_camera.*
 import java.io.ByteArrayInputStream
 
 
-class CameraFragment : Fragment(), GraphicFaceTracker.FaceDetectorListener {
+class CameraFragment : Fragment(), GraphicFaceTracker.FaceDetectorListener, BarcodeTracker.BarcodeDetectorListener {
     override fun onFaceDetected(face: Face) {
+        takePhoto()
+    }
+    override fun onBarcodeDetected(barcode: Barcode) {
         takePhoto()
     }
 
@@ -63,6 +66,8 @@ class CameraFragment : Fragment(), GraphicFaceTracker.FaceDetectorListener {
 
     private var mCameraSource: CameraSource? = null
     private var mPreview: CameraSourcePreview? = null
+    private var mode: ZippyActivity.CameraMode? = null
+    private var documentType: DocumentType? = null
     private var cameraId = CameraSource.CAMERA_FACING_FRONT
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -73,9 +78,9 @@ class CameraFragment : Fragment(), GraphicFaceTracker.FaceDetectorListener {
         super.onStart()
 
         arguments = arguments
-        val mode = arguments?.getSerializable(CameraFragment.CAMERA_MODE) as? ZippyActivity.CameraMode
+        mode = arguments?.getSerializable(CameraFragment.CAMERA_MODE) as? ZippyActivity.CameraMode
             ?: throw IllegalArgumentException("Mode was not passed to CameraFragment!")
-        val documentType = arguments?.getParcelable(CameraFragment.DOCUMENT_TYPE) as? DocumentType
+        documentType = arguments?.getParcelable(CameraFragment.DOCUMENT_TYPE) as? DocumentType
             ?: throw IllegalArgumentException("Document type was not passed to CameraFragment!")
 
         if (mode == ZippyActivity.CameraMode.FACE) {
@@ -83,11 +88,13 @@ class CameraFragment : Fragment(), GraphicFaceTracker.FaceDetectorListener {
             cameraId = CameraSource.CAMERA_FACING_FRONT
             GraphicFaceTracker.mFaceDetectorListener = this
         } else if (mode == ZippyActivity.CameraMode.DOCUMENT_FRONT) {
-            showDocumentFrontFrame(documentType)
+            showDocumentFrontFrame(documentType!!)
             cameraId = CameraSource.CAMERA_FACING_BACK
+            BarcodeTracker.mBarcodeDetectorListener = this
         } else if (mode == ZippyActivity.CameraMode.DOCUMENT_BACK) {
-            showDocumentBackFrame(documentType)
+            showDocumentBackFrame(documentType!!)
             cameraId = CameraSource.CAMERA_FACING_BACK
+            BarcodeTracker.mBarcodeDetectorListener = this
         }
 
         mPreview = cameraSourcePreview as CameraSourcePreview
@@ -112,20 +119,40 @@ class CameraFragment : Fragment(), GraphicFaceTracker.FaceDetectorListener {
     }
 
     private fun createCameraSource() {
-        val detector = FaceDetector.Builder(context!!)
-            .setClassificationType(FaceDetector.ALL_CLASSIFICATIONS)
-            .setMode(FaceDetector.ACCURATE_MODE)
-            .build()
-        detector.setProcessor(
-            MultiProcessor.Builder<Face>(GraphicFaceTrackerFactory())
-                .build())
+        if (mode == ZippyActivity.CameraMode.FACE) {
 
-        mCameraSource = CameraSource.Builder(context, detector)
-            .setRequestedPreviewSize(640, 480)
-            .setFacing(cameraId)
-            .setRequestedFps(10.0f)
-            .setAutoFocusEnabled(true)
-            .build()
+            val faceDetector = FaceDetector.Builder(context!!)
+                .setClassificationType(FaceDetector.ALL_CLASSIFICATIONS)
+                .setMode(FaceDetector.ACCURATE_MODE)
+                .build()
+            faceDetector.setProcessor(
+                MultiProcessor.Builder<Face>(GraphicFaceTrackerFactory())
+                    .build())
+
+            mCameraSource = CameraSource.Builder(context, faceDetector)
+                .setRequestedPreviewSize(640, 480)
+                .setFacing(cameraId)
+                .setRequestedFps(10.0f)
+                .setAutoFocusEnabled(true)
+                .build()
+
+        } else {
+            Log.e("DRIVERS_L", "IM IN CREATE CAMERA SOURCE ALRIGHT")
+
+            val barcodeDetector = BarcodeDetector.Builder(context!!)
+                .setBarcodeFormats(Barcode.DRIVER_LICENSE)
+                .build()
+            barcodeDetector.setProcessor(
+                MultiProcessor.Builder<Barcode>(BarcodeTrackerFactory())
+                    .build())
+
+            mCameraSource = CameraSource.Builder(context, barcodeDetector)
+                .setRequestedPreviewSize(640, 480)
+                .setFacing(cameraId)
+                .setRequestedFps(10.0f)
+                .setAutoFocusEnabled(true)
+                .build()
+        }
     }
 
     override fun onResume() {
