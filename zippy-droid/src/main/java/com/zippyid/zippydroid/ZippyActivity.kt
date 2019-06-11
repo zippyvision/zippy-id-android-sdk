@@ -64,7 +64,7 @@ class ZippyActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_zippy)
         sessionConfiguration = intent.getParcelableExtra("SESSION_CONFIGURATION")
-        switchToIDVerification()
+        switchToCamera(CameraMode.FACE)
     }
 
     fun onWizardNextStep(mode: CameraMode) {
@@ -194,7 +194,8 @@ class ZippyActivity : AppCompatActivity() {
     }
 
     private fun switchToCamera(mode: CameraMode) {
-        supportFragmentManager.beginTransaction().replace(R.id.fragment_container_fl, CameraFragment.newInstance(mode, documentType)).commit()
+//        supportFragmentManager.beginTransaction().replace(R.id.fragment_container_fl, CameraFragment.newInstance(mode, documentType)).commit()
+        supportFragmentManager.beginTransaction().replace(R.id.fragment_container_fl, CameraFragment.newInstance(mode)).commit()
         Log.d("ZIPPY", "Switched to camera!")
     }
 

@@ -7,15 +7,14 @@
         android:backgroundTint="@android:color/black"
         xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <com.zippyid.zippydroid.camera.helpers.CameraSourcePreview
-            android:id="@+id/cameraSourcePreview"
+    <TextureView
+            android:id="@+id/viewFinder"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintBottom_toTopOf="@id/takePictureBtn"
-            app:layout_constraintTop_toTopOf="parent" >
-    </com.zippyid.zippydroid.camera.helpers.CameraSourcePreview>
+            app:layout_constraintTop_toTopOf="parent" />
 
     <LinearLayout
             android:id="@+id/faceFrameLl"
@@ -25,8 +24,8 @@
             android:visibility="invisible"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toBottomOf="@id/cameraSourcePreview"
-            app:layout_constraintTop_toTopOf="@id/cameraSourcePreview" >
+            app:layout_constraintBottom_toBottomOf="@id/viewFinder"
+            app:layout_constraintTop_toTopOf="@id/viewFinder" >
 
         <ImageView
                 android:id="@+id/faceOpaqueBackgroundTopIv"
@@ -72,8 +71,8 @@
             android:visibility="invisible"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toBottomOf="@id/cameraSourcePreview"
-            app:layout_constraintTop_toTopOf="@id/cameraSourcePreview" >
+            app:layout_constraintBottom_toBottomOf="@id/viewFinder"
+            app:layout_constraintTop_toTopOf="@id/viewFinder" >
 
         <ImageView
                 android:id="@+id/documentFrontOpaqueBackgroundTopIv"
@@ -121,8 +120,8 @@
             android:visibility="invisible"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toBottomOf="@id/cameraSourcePreview"
-            app:layout_constraintTop_toTopOf="@id/cameraSourcePreview" >
+            app:layout_constraintBottom_toBottomOf="@id/viewFinder"
+            app:layout_constraintTop_toTopOf="@id/viewFinder" >
 
         <ImageView
                 android:id="@+id/documentBackOpaqueBackgroundTopIv"
