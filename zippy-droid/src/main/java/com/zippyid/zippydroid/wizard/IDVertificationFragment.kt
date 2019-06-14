@@ -37,7 +37,7 @@ class IDVertificationFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        apiClient = ApiClient(Zippy.secret, Zippy.key, Zippy.host, context!!)
+        apiClient = ApiClient(Zippy.token, Zippy.host, context!!)
         countryAdapter = ArrayAdapter(activity, android.R.layout.simple_spinner_dropdown_item)
         documentAdapter = ArrayAdapter(activity, android.R.layout.simple_spinner_dropdown_item)
 

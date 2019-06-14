@@ -14,13 +14,10 @@ import com.zippyid.zippydroid.network.model.ZippyResponse
 import com.zippyid.zippydroid.network.model.Country
 
 
-class ApiClient(private val secret: String, private val key: String, private val baseUrl: String, context: Context) {
+class ApiClient(private val token: String, private val baseUrl: String, context: Context) {
     companion object {
         private const val TAG = "ApiClient"
-        private const val REQUEST_TOKEN = "request_tokens"
-        private const val VERIFICATION = "verifications"
-        private const val RESULT = "result"
-        private lateinit var token: String
+        private lateinit var requestToken: String
     }
 
     private val gson = GsonBuilder().create()
@@ -28,10 +25,11 @@ class ApiClient(private val secret: String, private val key: String, private val
 
 
     fun getToken(asyncResponse: AsyncResponse<String>) {
-        val request = object : StringRequest(Request.Method.POST, "$baseUrl/v1/$REQUEST_TOKEN",
+        val request = object : StringRequest(
+            Method.POST, "$baseUrl/v1/request_tokens",
             Response.Listener<String> {
                 val authToken = gson.fromJson<AuthToken>(it, AuthToken::class.java)
-                token = authToken.token
+                requestToken = authToken.token
                 asyncResponse.onSuccess(it)
             }, Response.ErrorListener {
                 asyncResponse.onError(it)
@@ -39,8 +37,7 @@ class ApiClient(private val secret: String, private val key: String, private val
             }) {
             override fun getParams(): MutableMap<String, String> {
                 val params = HashMap<String, String>()
-                params["api_key"] = key
-                params["secret_key"] = secret
+                params["token"] = token
                 return params
             }
         }
@@ -51,7 +48,8 @@ class ApiClient(private val secret: String, private val key: String, private val
     fun sendImages(documentType: String, encodedFaceImage: String, encodedDocumentFront: String, encodedDocumentBack: String?, customerUid: String, asyncResponse: AsyncResponse<Any?>) {
         Log.d(TAG, "Trying to send images!")
 
-        val request = object : StringRequest(Request.Method.POST, "$baseUrl/v1/$VERIFICATION",
+        val request = object : StringRequest(
+            Method.POST, "$baseUrl/v1/verifications",
             Response.Listener<String> {
                 Log.d(TAG, "Successfully sending images!")
                 asyncResponse.onSuccess(null)
@@ -76,9 +74,10 @@ class ApiClient(private val secret: String, private val key: String, private val
     }
 
     fun getResult(customerUid: String, asyncResponse: AsyncResponse<ZippyResponse?>) {
-        val uri = "$baseUrl/v1/$RESULT?customer_uid=$customerUid&secret_key=$secret&api_key=$key"
+        val uri = "$baseUrl/v1/result?customer_uid=$customerUid"
 
-        val request = StringRequest(Request.Method.GET, uri,
+        val request = object : StringRequest(
+            Method.GET, uri,
             Response.Listener<String> {
                 val listType = object : TypeToken<List<ZippyResponse>>() {}.type
                 val successResponseList = gson.fromJson<List<ZippyResponse>>(it, listType)
@@ -86,7 +85,12 @@ class ApiClient(private val secret: String, private val key: String, private val
             }, Response.ErrorListener {
                 Log.e(TAG, "Error getting result!")
                 asyncResponse.onError(it)
-            })
+            }) {override fun getHeaders(): MutableMap<String, String> {
+                val headers = super.getHeaders()
+                headers["Authorization"] = "Token token=$requestToken"
+                return headers
+            }
+        }
 
         queue.add(request)
     }

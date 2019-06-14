@@ -3,22 +3,17 @@ import com.zippyid.zippydroid.network.model.ZippyCallback
 
 object Zippy {
     const val host = "https://app.zippyid.com/api"
-    lateinit var key: String
+    lateinit var token: String
         private set
-    lateinit var secret: String
-        private set
-    var customerUid: Int = -1
-    var zippyCallback: ZippyCallback? = null
+    var customerUid: String = "1"
+    var zippyOnSubmit: ZippyCallback? = null
+    var zippyOnReceiveResponse: ZippyCallback? = null
 
     @JvmStatic
-    fun initialize(key: String, secret: String, customerUid: Int = -1) {
-        this.key = key
-        this.secret = secret
+    fun initialize(token: String, customerUid: String, onSubmit: ZippyCallback, onReceiveResponse: ZippyCallback) {
+        this.token = token
         this.customerUid = customerUid
-    }
-
-    @JvmStatic
-    fun createCallback(callback: ZippyCallback) {
-        this.zippyCallback = callback
+        this.zippyOnSubmit = onSubmit
+        this.zippyOnReceiveResponse = onReceiveResponse
     }
 }
