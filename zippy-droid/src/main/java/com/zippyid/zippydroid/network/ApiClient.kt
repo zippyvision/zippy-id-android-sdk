@@ -18,7 +18,8 @@ class ApiClient(private val apiKey: String, private val baseUrl: String, context
     companion object {
         private const val TAG = "ApiClient"
         private const val REQUEST_TOKEN = "request_tokens"
-        private const val VERIFICATION = "verifications"
+        private const val VERIFICATIONS = "verifications"
+        private const val VERIFICATION = "verification"
         private const val RESULT = "result"
         private lateinit var requestToken: String
     }
@@ -56,7 +57,7 @@ class ApiClient(private val apiKey: String, private val baseUrl: String, context
         Log.d(TAG, "Trying to send images!")
 
         val request = object : StringRequest(
-            Method.POST, "$baseUrl/v1/$VERIFICATION",
+            Method.POST, "$baseUrl/v1/$VERIFICATIONS",
             Response.Listener<String> {
                 Log.d(TAG, "Successfully sending images!")
                 asyncResponse.onSuccess(null)
@@ -81,7 +82,7 @@ class ApiClient(private val apiKey: String, private val baseUrl: String, context
     }
 
     fun getResult(customerUid: String, asyncResponse: AsyncResponse<ZippyResponse?>) {
-        val uri = "$baseUrl/v1/$RESULT?customer_uid=$customerUid"
+        val uri = "$baseUrl/v1/$VERIFICATION?customer_uid=$customerUid"
 
         val request = object : StringRequest(
             Method.GET, uri,
@@ -95,7 +96,7 @@ class ApiClient(private val apiKey: String, private val baseUrl: String, context
             }) {
             override fun getHeaders(): MutableMap<String, String> {
                 val params = HashMap(super.getHeaders())
-                params["Authorization"] = "Token token=$requestToken"
+                params["Authorization"] = "Token token=$apiKey"
                 return params
             }
         }
