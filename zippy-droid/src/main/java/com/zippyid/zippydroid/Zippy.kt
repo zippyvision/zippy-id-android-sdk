@@ -5,15 +5,12 @@ object Zippy {
     const val host = "https://app.zippyid.com/api"
     lateinit var token: String
         private set
-    var customerUid: String = "1"
-    var zippyOnSubmit: ZippyCallback? = null
-    var zippyOnReceiveResponse: ZippyCallback? = null
+    var callback: ZippyCallback? = null
+    var isInitialized = false
 
     @JvmStatic
-    fun initialize(token: String, customerUid: String, onSubmit: ZippyCallback, onReceiveResponse: ZippyCallback) {
-        this.token = token
-        this.customerUid = customerUid
-        this.zippyOnSubmit = onSubmit
-        this.zippyOnReceiveResponse = onReceiveResponse
+    fun initialize(apiKey: String) {
+        this.token = apiKey
+        this.isInitialized = true
     }
 }

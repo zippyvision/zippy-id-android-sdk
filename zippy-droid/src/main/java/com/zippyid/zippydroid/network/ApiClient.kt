@@ -14,19 +14,21 @@ import com.zippyid.zippydroid.network.model.ZippyResponse
 import com.zippyid.zippydroid.network.model.Country
 
 
-class ApiClient(private val token: String, private val baseUrl: String, context: Context) {
+class ApiClient(private val apiKey: String, private val baseUrl: String, context: Context) {
     companion object {
         private const val TAG = "ApiClient"
+        private const val REQUEST_TOKEN = "request_tokens"
+        private const val VERIFICATION = "verifications"
+        private const val RESULT = "result"
         private lateinit var requestToken: String
     }
 
     private val gson = GsonBuilder().create()
     private val queue: RequestQueue = Volley.newRequestQueue(context)
 
-
     fun getToken(asyncResponse: AsyncResponse<String>) {
         val request = object : StringRequest(
-            Method.POST, "$baseUrl/v1/request_tokens",
+            Method.POST, "$baseUrl/v1/$REQUEST_TOKEN",
             Response.Listener<String> {
                 val authToken = gson.fromJson<AuthToken>(it, AuthToken::class.java)
                 requestToken = authToken.token
@@ -35,9 +37,14 @@ class ApiClient(private val token: String, private val baseUrl: String, context:
                 asyncResponse.onError(it)
                 Log.e(TAG, "Error getting token!")
             }) {
+            override fun getHeaders(): MutableMap<String, String> {
+                val params = HashMap(super.getHeaders())
+                params["Authorization"] = "Token token=$apiKey"
+                return params
+            }
             override fun getParams(): MutableMap<String, String> {
                 val params = HashMap<String, String>()
-                params["token"] = token
+                params["token"] = apiKey
                 return params
             }
         }
@@ -49,7 +56,7 @@ class ApiClient(private val token: String, private val baseUrl: String, context:
         Log.d(TAG, "Trying to send images!")
 
         val request = object : StringRequest(
-            Method.POST, "$baseUrl/v1/verifications",
+            Method.POST, "$baseUrl/v1/$VERIFICATION",
             Response.Listener<String> {
                 Log.d(TAG, "Successfully sending images!")
                 asyncResponse.onSuccess(null)
@@ -58,9 +65,9 @@ class ApiClient(private val token: String, private val baseUrl: String, context:
                 Log.e(TAG, "Error sending images!")
             }) {
             override fun getParams(): MutableMap<String, String> {
-                Log.i(TAG, "Token: $token")
+                Log.i(TAG, "Token: $requestToken")
                 val params = HashMap<String, String>()
-                params["token"] = token
+                params["token"] = requestToken
                 params["document_country"] = "lv"
                 params["document_type"] = documentType
                 params["image_data[selfie]"] = encodedFaceImage
@@ -74,7 +81,7 @@ class ApiClient(private val token: String, private val baseUrl: String, context:
     }
 
     fun getResult(customerUid: String, asyncResponse: AsyncResponse<ZippyResponse?>) {
-        val uri = "$baseUrl/v1/result?customer_uid=$customerUid"
+        val uri = "$baseUrl/v1/$RESULT?customer_uid=$customerUid"
 
         val request = object : StringRequest(
             Method.GET, uri,
@@ -85,10 +92,11 @@ class ApiClient(private val token: String, private val baseUrl: String, context:
             }, Response.ErrorListener {
                 Log.e(TAG, "Error getting result!")
                 asyncResponse.onError(it)
-            }) {override fun getHeaders(): MutableMap<String, String> {
-                val headers = super.getHeaders()
-                headers["Authorization"] = "Token token=$requestToken"
-                return headers
+            }) {
+            override fun getHeaders(): MutableMap<String, String> {
+                val params = HashMap(super.getHeaders())
+                params["Authorization"] = "Token token=$requestToken"
+                return params
             }
         }
 

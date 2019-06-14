@@ -129,7 +129,7 @@ class ZippyActivity : AppCompatActivity() {
             override fun onSuccess(response: Any?) {
                 state = ZippyState.DONE
                 pollJobStatus(apiClient, null)
-                Zippy.zippyOnSubmit?.onSubmit()
+                Zippy.callback?.onSubmit()
             }
 
             override fun onError(error: VolleyError) {
@@ -161,7 +161,7 @@ class ZippyActivity : AppCompatActivity() {
 
                     when {
                         !response?.state.isNullOrEmpty() && response?.state != "processing"-> {
-                            Zippy.zippyOnSubmit?.onFinished()
+                            Zippy.callback?.onFinished()
                             setResult(Activity.RESULT_OK, returnIntent)
                             finish()
                         }
