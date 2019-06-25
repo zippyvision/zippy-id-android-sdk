@@ -27,7 +27,7 @@ class ApiClient(private val apiKey: String, private val baseUrl: String, context
         val request = object : StringRequest(
             Method.POST, "$baseUrl/v1/request_tokens",
             Response.Listener<String> {
-                val authToken = gson.fromJson<AuthToken>(it, AuthToken::class.java)
+                val authToken = gson.fromJson(it, AuthToken::class.java)
                 requestToken = authToken.token
                 asyncResponse.onSuccess(it)
             }, Response.ErrorListener {
@@ -37,11 +37,6 @@ class ApiClient(private val apiKey: String, private val baseUrl: String, context
             override fun getHeaders(): MutableMap<String, String> {
                 val params = HashMap(super.getHeaders())
                 params["Authorization"] = "Token token=$apiKey"
-                return params
-            }
-            override fun getParams(): MutableMap<String, String> {
-                val params = HashMap<String, String>()
-                params["token"] = apiKey
                 return params
             }
         }
