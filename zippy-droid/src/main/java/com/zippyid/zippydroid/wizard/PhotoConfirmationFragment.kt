@@ -40,7 +40,7 @@ class PhotoConfirmationFragment: Fragment()  {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        apiClient = ApiClient(Zippy.secret, Zippy.key, Zippy.host, context!!)
+        apiClient = ApiClient(Zippy.token, Zippy.host, context!!)
 
         mode = arguments?.getSerializable(PhotoConfirmationFragment.CAMERA_MODE) as? ZippyActivity.CameraMode
             ?: throw IllegalArgumentException("Mode was not passed to PhotoConfirmationFragment!")
@@ -59,7 +59,7 @@ class PhotoConfirmationFragment: Fragment()  {
     }
 
     fun adjustForMode() {
-        var documentTypeLabel: String? = if (documentType.value == "id_card") documentType.label else documentType.label!!.toLowerCase()
+        val documentTypeLabel: String? = if (documentType.value == "id_card") documentType.label else documentType.label!!.toLowerCase()
 
         when(mode) {
             ZippyActivity.CameraMode.FACE -> {

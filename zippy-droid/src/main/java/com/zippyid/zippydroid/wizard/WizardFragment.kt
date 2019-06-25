@@ -43,7 +43,7 @@ class WizardFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        apiClient = ApiClient(Zippy.secret, Zippy.key, Zippy.host, context!!)
+        apiClient = ApiClient(Zippy.token, Zippy.host, context!!)
 
         state = arguments?.getSerializable(ZIPPY_STATE) as? ZippyActivity.ZippyState
                 ?: throw IllegalArgumentException("State was not passed to WizardFragment!")
