@@ -17,10 +17,6 @@ import com.zippyid.zippydroid.network.model.Country
 class ApiClient(private val apiKey: String, private val baseUrl: String, context: Context) {
     companion object {
         private const val TAG = "ApiClient"
-        private const val REQUEST_TOKEN = "request_tokens"
-        private const val VERIFICATIONS = "verifications"
-        private const val VERIFICATION = "verification"
-        private const val RESULT = "result"
         private lateinit var requestToken: String
     }
 
@@ -29,7 +25,7 @@ class ApiClient(private val apiKey: String, private val baseUrl: String, context
 
     fun getToken(asyncResponse: AsyncResponse<String>) {
         val request = object : StringRequest(
-            Method.POST, "$baseUrl/v1/$REQUEST_TOKEN",
+            Method.POST, "$baseUrl/v1/request_tokens",
             Response.Listener<String> {
                 val authToken = gson.fromJson<AuthToken>(it, AuthToken::class.java)
                 requestToken = authToken.token
@@ -57,7 +53,7 @@ class ApiClient(private val apiKey: String, private val baseUrl: String, context
         Log.d(TAG, "Trying to send images!")
 
         val request = object : StringRequest(
-            Method.POST, "$baseUrl/v1/$VERIFICATIONS",
+            Method.POST, "$baseUrl/v1/verifications",
             Response.Listener<String> {
                 Log.d(TAG, "Successfully sending images!")
                 asyncResponse.onSuccess(null)
@@ -82,7 +78,7 @@ class ApiClient(private val apiKey: String, private val baseUrl: String, context
     }
 
     fun getResult(customerUid: String, asyncResponse: AsyncResponse<ZippyResponse?>) {
-        val uri = "$baseUrl/v1/$VERIFICATION?customer_uid=$customerUid"
+        val uri = "$baseUrl/v1/verification?customer_uid=$customerUid"
 
         val request = object : StringRequest(
             Method.GET, uri,
