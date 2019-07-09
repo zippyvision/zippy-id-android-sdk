@@ -120,6 +120,11 @@ class WizardFragment : Fragment() {
                     progressBar.visibility = View.VISIBLE
                 }
             }
+            ZippyActivity.ZippyState.RETRY -> {
+                (activity as? ZippyActivity)?.state = ZippyActivity.ZippyState.READY
+                state = ZippyActivity.ZippyState.READY
+                processAccordingToState()
+            }
         }
     }
 }

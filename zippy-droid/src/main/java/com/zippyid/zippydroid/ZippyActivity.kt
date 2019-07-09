@@ -16,6 +16,8 @@ import com.zippyid.zippydroid.network.AsyncResponse
 import com.zippyid.zippydroid.network.model.DocumentType
 import com.zippyid.zippydroid.network.model.SessionConfig
 import com.zippyid.zippydroid.network.model.ZippyResponse
+import com.zippyid.zippydroid.network.model.ZippyVerification
+import com.zippyid.zippydroid.wizard.ErrorFragment
 import com.zippyid.zippydroid.wizard.IDVertificationFragment
 import com.zippyid.zippydroid.wizard.PhotoConfirmationFragment
 import com.zippyid.zippydroid.wizard.WizardFragment
@@ -33,7 +35,8 @@ class ZippyActivity : AppCompatActivity() {
         DOC_FRONT_TAKEN,
         DOC_BACK_TAKEN,
         READY_TO_SEND,
-        DONE
+        DONE,
+        RETRY
     }
 
     enum class DocumentMode(val value: String) {
@@ -65,6 +68,11 @@ class ZippyActivity : AppCompatActivity() {
         setContentView(R.layout.activity_zippy)
         sessionConfiguration = intent.getParcelableExtra("SESSION_CONFIGURATION")
         switchToIDVerification()
+    }
+
+    fun onRetryStep(documentType: DocumentType) {
+        state = ZippyState.RETRY
+        switchToWizard(documentType)
     }
 
     fun onWizardNextStep(mode: CameraMode) {
@@ -125,10 +133,12 @@ class ZippyActivity : AppCompatActivity() {
         encodedDocumentFrontImage = documentFrontImage!!.resize()!!.toEncodedPng()
         encodedDocumentBackImage = documentBackImage?.resize()?.toEncodedPng()
 
-        apiClient.sendImages(documentType.value, encodedFaceImage!!, encodedDocumentFrontImage!!, encodedDocumentBackImage, sessionConfiguration.customerId!!, object : AsyncResponse<Any?> {
-            override fun onSuccess(response: Any?) {
+        apiClient.sendImages(documentType.value, encodedFaceImage!!, encodedDocumentFrontImage!!, encodedDocumentBackImage, sessionConfiguration.customerId!!, object : AsyncResponse<String?> {
+            override fun onSuccess(response: String?) {
                 state = ZippyState.DONE
-                pollJobStatus(apiClient, null)
+                response?.apply {
+                    pollJobStatus(apiClient, null, this)
+                }
                 Zippy.callback?.onSubmit()
             }
 
@@ -139,7 +149,7 @@ class ZippyActivity : AppCompatActivity() {
     }
 
     var count = 0
-    fun pollJobStatus(apiClient: ApiClient, error: VolleyError?) {
+    fun pollJobStatus(apiClient: ApiClient, error: VolleyError?, verificationId: String) {
         Log.i(TAG, "Trying to get status: $count")
 
 
@@ -147,8 +157,8 @@ class ZippyActivity : AppCompatActivity() {
             setResult(Activity.RESULT_CANCELED, null)
             val returnIntent = Intent()
 
-            error?.let { returnIntent.putExtra(ZippyActivity.ZIPPY_RESULT, error.localizedMessage) } ?: run {
-                returnIntent.putExtra(ZippyActivity.ZIPPY_RESULT, "Request timed out")
+            error?.let { returnIntent.putExtra(ZIPPY_RESULT, error.localizedMessage) } ?: run {
+                returnIntent.putExtra(ZIPPY_RESULT, "Request timed out")
             }
             finish()
         }
@@ -156,20 +166,15 @@ class ZippyActivity : AppCompatActivity() {
         apiClient
             .getResult(sessionConfiguration.customerId!!, object : AsyncResponse<ZippyResponse?> {
                 override fun onSuccess(response: ZippyResponse?) {
-                    val returnIntent = Intent()
-                    response?.let { returnIntent.putExtra(ZippyActivity.ZIPPY_RESULT, response) }
-
                     when {
                         !response?.state.isNullOrEmpty() && response?.state != "processing"-> {
-                            Zippy.callback?.onFinished()
-                            setResult(Activity.RESULT_OK, returnIntent)
-                            finish()
+                            getVerificationInformation(apiClient, verificationId, response)
                         }
                         else -> {
                             Log.i(TAG, "Scheduling poll")
                             count += 1
                             Handler().postDelayed({
-                                pollJobStatus(apiClient, null)
+                                pollJobStatus(apiClient, null, verificationId)
                             }, 2000)
 
                         }
@@ -180,15 +185,45 @@ class ZippyActivity : AppCompatActivity() {
                     Log.i(TAG, "Error")
                     count += 1
                     Handler().postDelayed({
-                        pollJobStatus(apiClient, error)
+                        pollJobStatus(apiClient, error, verificationId)
                     }, 2000)
                 }
+            })
+    }
+
+    fun getVerificationInformation(apiClient: ApiClient, verificationId: String, zippyResult: ZippyResponse?) {
+        apiClient
+            .checkVerificationStatus(verificationId, object : AsyncResponse<ZippyVerification?> {
+                override fun onSuccess(response: ZippyVerification?) {
+                    val returnIntent = Intent()
+                    zippyResult.let { returnIntent.putExtra(ZIPPY_RESULT, it) }
+
+                    when (response?.state) {
+                        "success" -> {
+                            Zippy.callback?.onFinished()
+                            setResult(Activity.RESULT_OK, returnIntent)
+                            finish()
+                        }
+                        "failed" -> {
+                            switchToErrorFragment(response)
+                        }
+                        else -> {}
+                    }
+                }
+
+                override fun onError(error: VolleyError) {
+                    setResult(Activity.RESULT_CANCELED, null)
+                    val returnIntent = Intent()
+                    returnIntent.putExtra(ZIPPY_RESULT, error.localizedMessage)
+                    finish()
+                }
+
             })
     }
     
     fun sendErrorResult(message: String) {
         val returnIntent = Intent()
-        returnIntent.putExtra(ZippyActivity.ZIPPY_RESULT, message)
+        returnIntent.putExtra(ZIPPY_RESULT, message)
         setResult(Activity.RESULT_CANCELED, returnIntent)
         finish()
     }
@@ -211,5 +246,10 @@ class ZippyActivity : AppCompatActivity() {
     private fun switchToPhotoConfirmation(mode: CameraMode) {
         supportFragmentManager.beginTransaction().replace(R.id.fragment_container_fl, PhotoConfirmationFragment.newInstance(mode, documentType)).commit()
         Log.d("ZIPPY", "Switched to Photo confirmation!")
+    }
+
+    private fun switchToErrorFragment(verification: ZippyVerification) {
+        supportFragmentManager.beginTransaction().replace(R.id.fragment_container_fl, ErrorFragment.newInstance(verification, documentType)).commit()
+        Log.d("ZIPPY", "Switched to Error fragment!")
     }
 }

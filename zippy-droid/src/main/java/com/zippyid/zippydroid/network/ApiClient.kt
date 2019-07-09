@@ -9,10 +9,7 @@ import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
-import com.zippyid.zippydroid.network.model.AuthToken
-import com.zippyid.zippydroid.network.model.ZippyResponse
-import com.zippyid.zippydroid.network.model.Country
-
+import com.zippyid.zippydroid.network.model.*
 
 class ApiClient(private val apiKey: String, private val baseUrl: String, context: Context) {
     companion object {
@@ -44,15 +41,19 @@ class ApiClient(private val apiKey: String, private val baseUrl: String, context
         queue.add(request)
     }
 
-    fun sendImages(documentType: String, encodedFaceImage: String, encodedDocumentFront: String, encodedDocumentBack: String?, customerUid: String, asyncResponse: AsyncResponse<Any?>) {
+    fun applyNewToken(newToken: String) {
+        requestToken = newToken
+    }
+
+    fun sendImages(documentType: String, encodedFaceImage: String, encodedDocumentFront: String, encodedDocumentBack: String?, customerUid: String, asyncResponse: AsyncResponse<String?>) {
         Log.d(TAG, "Trying to send images!")
 
         val request = object : StringRequest(
             Method.POST, "$baseUrl/v1/verifications",
             Response.Listener<String> {
                 Log.d(TAG, "Successfully sending images!")
-                asyncResponse.onSuccess(null)
-
+                val ids = gson.fromJson(it, IdModel::class.java)
+                asyncResponse.onSuccess(ids.verificationId)
             }, Response.ErrorListener {
                 Log.e(TAG, "Error sending images!")
             }) {
@@ -91,6 +92,22 @@ class ApiClient(private val apiKey: String, private val baseUrl: String, context
                 return params
             }
         }
+
+        queue.add(request)
+    }
+
+    fun checkVerificationStatus(verificationId: String, asyncResponse: AsyncResponse<ZippyVerification?>) {
+        val uri = "$baseUrl/sdk/verifications/$verificationId/progress_check"
+
+        val request = object : StringRequest(
+            Method.GET, uri,
+            Response.Listener<String> {
+                val verification = gson.fromJson(it, ZippyVerification::class.java)
+                asyncResponse.onSuccess(verification)
+            }, Response.ErrorListener {
+                asyncResponse.onError(it)
+                Log.e(TAG, "Error checking progress!")
+            }) {}
 
         queue.add(request)
     }
