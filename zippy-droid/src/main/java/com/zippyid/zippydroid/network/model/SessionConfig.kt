@@ -6,15 +6,14 @@ import com.google.gson.annotations.SerializedName
 
 data class SessionConfig(
     @SerializedName("customer_uid")
-    val customerId: String?,
+    val customerId: String,
     @SerializedName("document_type")
-    val documentType: DocumentType?
+    var documentType: DocumentType
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readString(),
         parcel.readParcelable(DocumentType::class.java.classLoader)
-    ) {
-    }
+    )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeString(customerId)

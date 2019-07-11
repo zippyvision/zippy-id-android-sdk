@@ -5,37 +5,18 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.lifecycle.ViewModelProviders
 import com.android.volley.AuthFailureError
-import com.android.volley.VolleyError
 import com.zippyid.zippydroid.R
 import com.zippyid.zippydroid.Zippy
 import com.zippyid.zippydroid.ZippyActivity
-import com.zippyid.zippydroid.network.ApiClient
-import com.zippyid.zippydroid.network.AsyncResponse
-import com.zippyid.zippydroid.network.model.DocumentType
+import com.zippyid.zippydroid.extension.observeLiveData
+import com.zippyid.zippydroid.viewModel.*
 import kotlinx.android.synthetic.main.fragment_wizard.*
 
 class WizardFragment : Fragment() {
-    companion object {
-        private const val ZIPPY_STATE = "zippy_state"
-        private const val DOCUMENT_TYPE = "document_type"
-
-        fun newInstance(
-            state: ZippyActivity.ZippyState,
-            documentType: DocumentType?
-        ): WizardFragment {
-            val bundle = Bundle()
-            bundle.putSerializable(ZIPPY_STATE, state)
-            bundle.putParcelable(DOCUMENT_TYPE, documentType)
-            val fragment = WizardFragment()
-            fragment.arguments = bundle
-            return fragment
-        }
-    }
-
-    private lateinit var state: ZippyActivity.ZippyState
-    private lateinit var documentType: DocumentType
-    private lateinit var apiClient: ApiClient
+    lateinit var viewModelFactory: ZippyViewModelFactory
+    private lateinit var viewModel: ZippyViewModel
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_wizard, container, false)
@@ -43,88 +24,101 @@ class WizardFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        apiClient = ApiClient(Zippy.token, Zippy.host, context!!)
 
-        state = arguments?.getSerializable(ZIPPY_STATE) as? ZippyActivity.ZippyState
-                ?: throw IllegalArgumentException("State was not passed to WizardFragment!")
-        documentType = arguments?.getParcelable(DOCUMENT_TYPE) as? DocumentType
-                ?: throw IllegalArgumentException("Document type was not passed to WizardFragment!")
+        viewModelFactory = ZippyViewModelFactory(context!!, (activity as ZippyActivity).getConfig())
+        viewModel = ViewModelProviders.of((activity as ZippyActivity), viewModelFactory).get(ZippyViewModel::class.java)
 
         adjustViews()
-        processAccordingToState()
+        observeLiveData()
+        viewModel.setZippyState(viewModel.state)
     }
 
-    private fun adjustViews() {
-        if (documentType.value == ZippyActivity.DocumentMode.PASSPORT.value) {
-            documentBackLabelTv.visibility = View.GONE
-            docBackOkLabelTv.setText("")
+    private fun observeLiveData() {
+        viewLifecycleOwner.observeLiveData(viewModel.zippyStateLiveData) {
+            processAccordingToState(it)
+        }
+        viewLifecycleOwner.observeLiveData(viewModel.verificationIdLiveData) {
+            viewModel.pollJobStatus( null, it)
+            Zippy.callback?.onSubmit()
+        }
+        viewLifecycleOwner.observeLiveData(viewModel.volleyErrorLiveData) {
+            val message = if (it is AuthFailureError) {
+                "Authorization error!"
+            } else {
+                "Unexpected error!"
+            }
+            (activity as ZippyActivity).sendErrorResult(message)
+        }
+        viewLifecycleOwner.observeLiveData(viewModel.cameraModeLiveData) { mode ->
+            zippyBtn.setOnClickListener {
+                if (mode != CameraMode.NONE) {
+                    (activity as? ZippyActivity)?.toCameraFragment()
+                } else {
+                    zippyBtn.isEnabled = false
+                    viewModel.sendImages()
+                    sendingOkLabelTv.visibility = View.VISIBLE
+                    zippyBtn.text = resources.getString(R.string.processing)
+                    progressBar.visibility = View.VISIBLE
+                }
+            }
+        }
+        viewLifecycleOwner.observeLiveData(viewModel.verificationStateAndZippyResult) { (verification, response) ->
+            if (verification.state == "success" && viewModel.state == ZippyState.DONE) {
+                (activity as ZippyActivity).sendSuccessfulResult(response)
+            } else if (verification.state == "failed" && viewModel.state == ZippyState.DONE) {
+                (activity as ZippyActivity).toErrorFragment()
+            } else if (viewModel.state == ZippyState.DONE) {
+                (activity as ZippyActivity).sendErrorResult("Unknown error")
+            }
+        }
+        viewLifecycleOwner.observeLiveData(viewModel.shouldStopLiveData) {
+            (activity as ZippyActivity).sendCancelledResult(it.second)
         }
     }
 
-    private fun processAccordingToState() {
-        when(state) {
-            ZippyActivity.ZippyState.LOADING -> {
-                apiClient.getToken(object : AsyncResponse<String> {
-                    override fun onSuccess(response: String) {
-                        (activity as? ZippyActivity)?.state = ZippyActivity.ZippyState.READY
-                        state = ZippyActivity.ZippyState.READY
-                        processAccordingToState()
-                    }
+    private fun adjustViews() {
+        if ((activity as ZippyActivity).getConfig().documentType.value == DocumentMode.PASSPORT.value) {
+            documentBackLabelTv.visibility = View.GONE
+            docBackOkLabelTv.text = ""
+        }
+    }
 
-                    override fun onError(error: VolleyError) {
-                        val message = if (error is AuthFailureError) {
-                            "Authorization error!"
-                        } else {
-                            "Unexpected error!"
-                        }
-
-                        (activity as ZippyActivity).sendErrorResult(message)
-                    }
-                })
+    private fun processAccordingToState(zippyState: ZippyState) {
+        when(zippyState) {
+            ZippyState.LOADING -> {
+                viewModel.getToken()
             }
-            ZippyActivity.ZippyState.READY -> {
+            ZippyState.READY -> {
                 preparingOkLabelTv?.visibility = View.VISIBLE
-                zippyBtn.text = "Take selfie"
-                zippyBtn.setOnClickListener {
-                    (activity as? ZippyActivity)?.onWizardNextStep(ZippyActivity.CameraMode.FACE)
-                }
+                zippyBtn.text = resources.getString(R.string.take_selfie)
+                viewModel.setCameraMode(CameraMode.FACE)
             }
-            ZippyActivity.ZippyState.FACE_TAKEN -> {
+            ZippyState.FACE_TAKEN -> {
                 preparingOkLabelTv.visibility = View.VISIBLE
                 faceOkLabelTv.visibility = View.VISIBLE
-                zippyBtn.text = "Take document front"
-                zippyBtn.setOnClickListener {
-                    (activity as? ZippyActivity)?.onWizardNextStep(ZippyActivity.CameraMode.DOCUMENT_FRONT)
-                }
+                zippyBtn.text = resources.getString(R.string.take_document_front)
+                viewModel.setCameraMode(CameraMode.DOCUMENT_FRONT)
             }
-            ZippyActivity.ZippyState.DOC_FRONT_TAKEN -> {
+            ZippyState.DOC_FRONT_TAKEN -> {
                 preparingOkLabelTv.visibility = View.VISIBLE
                 faceOkLabelTv.visibility = View.VISIBLE
                 docFrontOkLabelTv.visibility = View.VISIBLE
-                zippyBtn.text = "Take document back"
-                zippyBtn.setOnClickListener {
-                    (activity as? ZippyActivity)?.onWizardNextStep(ZippyActivity.CameraMode.DOCUMENT_BACK)
-                }
+                zippyBtn.text = resources.getString(R.string.take_document_back)
+                viewModel.setCameraMode(CameraMode.DOCUMENT_BACK)
             }
-            ZippyActivity.ZippyState.READY_TO_SEND -> {
+            ZippyState.READY_TO_SEND -> {
                 preparingOkLabelTv.visibility = View.VISIBLE
                 faceOkLabelTv.visibility = View.VISIBLE
                 docFrontOkLabelTv.visibility = View.VISIBLE
                 docBackOkLabelTv.visibility = View.VISIBLE
-                zippyBtn.text = "Send info!"
-                zippyBtn.setOnClickListener {
-                    zippyBtn.setEnabled(false)
-                    (activity as ZippyActivity).sendImages(apiClient, documentType)
-                    sendingOkLabelTv.visibility = View.VISIBLE
-                    zippyBtn.text = "Processing..."
-                    progressBar.visibility = View.VISIBLE
-                }
+                zippyBtn.text = resources.getString(R.string.send_info)
+                viewModel.setCameraMode(CameraMode.NONE)
             }
-            ZippyActivity.ZippyState.RETRY -> {
-                (activity as? ZippyActivity)?.state = ZippyActivity.ZippyState.READY
-                state = ZippyActivity.ZippyState.READY
-                processAccordingToState()
+            ZippyState.RETRY -> {
+                viewModel.state = ZippyState.READY
+                processAccordingToState(ZippyState.READY)
             }
+            else -> {}
         }
     }
 }

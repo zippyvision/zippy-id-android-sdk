@@ -5,36 +5,17 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProviders
 import com.zippyid.zippydroid.R
-import com.zippyid.zippydroid.Zippy
 import com.zippyid.zippydroid.ZippyActivity
-import com.zippyid.zippydroid.network.ApiClient
-import com.zippyid.zippydroid.network.model.DocumentType
-import com.zippyid.zippydroid.network.model.ZippyVerification
+import com.zippyid.zippydroid.viewModel.ZippyState
+import com.zippyid.zippydroid.viewModel.ZippyViewModel
+import com.zippyid.zippydroid.viewModel.ZippyViewModelFactory
 import kotlinx.android.synthetic.main.fragment_error.*
 
 class ErrorFragment: Fragment()  {
-    companion object {
-        private const val VERIFICATION_STATE = "verification_state"
-        private const val DOCUMENT_TYPE = "document_type"
-
-        fun newInstance(
-            verification: ZippyVerification,
-            documentType: DocumentType?
-        ): ErrorFragment {
-            val bundle = Bundle()
-            bundle.putParcelable(VERIFICATION_STATE, verification)
-            bundle.putParcelable(DOCUMENT_TYPE, documentType)
-            val fragment = ErrorFragment()
-            fragment.arguments = bundle
-            return fragment
-        }
-    }
-
-    private lateinit var documentType: DocumentType
-    private lateinit var verification: ZippyVerification
-
-    private lateinit var apiClient: ApiClient
+    lateinit var viewModelFactory: ZippyViewModelFactory
+    private lateinit var viewModel: ZippyViewModel
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_error, container, false)
@@ -43,24 +24,19 @@ class ErrorFragment: Fragment()  {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        apiClient = ApiClient(Zippy.token, Zippy.host, context!!)
+        viewModelFactory = ZippyViewModelFactory(context!!, (activity as ZippyActivity).getConfig())
+        viewModel = ViewModelProviders.of((activity as ZippyActivity), viewModelFactory).get(ZippyViewModel::class.java)
 
-        documentType = arguments?.getParcelable(DOCUMENT_TYPE) as? DocumentType
-                ?: throw IllegalArgumentException("Document type was not passed to CameraFragment!")
+        val errorMessage = viewModel.verification?.error
+        descriptionTv.text = if (errorMessage != null) resources.getString(R.string.reason_for_failure, errorMessage) else resources.getString(R.string.reason_unknown)
 
-        verification = arguments?.getParcelable(VERIFICATION_STATE) as? ZippyVerification
-            ?: throw IllegalArgumentException("Verification state was not passed to CameraFragment!")
-
-        val errorMessage = verification.error
-        descriptionTv.text = if (errorMessage != null) "Reason: $errorMessage" else "Reason: unknown"
-
-        verification.requestToken?.apply {
-            apiClient.applyNewToken(this)
+        viewModel.verification?.requestToken?.apply {
+            viewModel.applyNewToken(this)
         }
 
         retryBtn.setOnClickListener {
-            (activity as? ZippyActivity)?.onRetryStep(documentType)
+            viewModel.setZippyState(ZippyState.RETRY)
+            (activity as? ZippyActivity)?.toIDVerificationFragment()
         }
     }
-
 }

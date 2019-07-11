@@ -4,21 +4,15 @@ import android.app.Activity
 import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
-import android.os.Handler
 import androidx.appcompat.app.AppCompatActivity
 import android.util.Log
 import com.android.volley.VolleyError
 import com.zippyid.zippydroid.camera.CameraFragment
-import com.zippyid.zippydroid.extension.resize
-import com.zippyid.zippydroid.extension.*
-import com.zippyid.zippydroid.network.ApiClient
-import com.zippyid.zippydroid.network.AsyncResponse
-import com.zippyid.zippydroid.network.model.DocumentType
 import com.zippyid.zippydroid.network.model.SessionConfig
 import com.zippyid.zippydroid.network.model.ZippyResponse
-import com.zippyid.zippydroid.network.model.ZippyVerification
+import com.zippyid.zippydroid.viewModel.*
 import com.zippyid.zippydroid.wizard.ErrorFragment
-import com.zippyid.zippydroid.wizard.IDVertificationFragment
+import com.zippyid.zippydroid.wizard.IDVerificationFragment
 import com.zippyid.zippydroid.wizard.PhotoConfirmationFragment
 import com.zippyid.zippydroid.wizard.WizardFragment
 
@@ -28,199 +22,26 @@ class ZippyActivity : AppCompatActivity() {
         private const val TAG = "ZippyActivity"
     }
 
-    enum class ZippyState {
-        LOADING,
-        READY,
-        FACE_TAKEN,
-        DOC_FRONT_TAKEN,
-        DOC_BACK_TAKEN,
-        READY_TO_SEND,
-        DONE,
-        RETRY
+    private var sessionConfiguration: SessionConfig? = null
+
+    fun getConfig(): SessionConfig {
+        return sessionConfiguration ?: intent.getParcelableExtra("SESSION_CONFIGURATION")
     }
-
-    enum class DocumentMode(val value: String) {
-        PASSPORT("passport"),
-        ID_CARD("id_card"),
-        DRIVERS_LICENCE("drivers_licence")
-    }
-
-    enum class CameraMode {
-        FACE,
-        DOCUMENT_FRONT,
-        DOCUMENT_BACK
-    }
-
-    private var encodedFaceImage: String? = null
-    private var encodedDocumentFrontImage: String? = null
-    private var encodedDocumentBackImage: String? = null
-
-    var faceImage: Bitmap? = null
-    var documentFrontImage: Bitmap? = null
-    var documentBackImage: Bitmap? = null
-
-    var state = ZippyState.LOADING
-    private lateinit var documentType: DocumentType
-    private lateinit var sessionConfiguration: SessionConfig
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_zippy)
-        sessionConfiguration = intent.getParcelableExtra("SESSION_CONFIGURATION")
         switchToIDVerification()
     }
 
-    fun onRetryStep(documentType: DocumentType) {
-        state = ZippyState.RETRY
-        switchToWizard(documentType)
+    fun sendSuccessfulResult(response: ZippyResponse) {
+        val returnIntent = Intent()
+        returnIntent.putExtra(ZIPPY_RESULT, response)
+        Zippy.callback?.onFinished()
+        setResult(Activity.RESULT_OK, returnIntent)
+        finish()
     }
 
-    fun onWizardNextStep(mode: CameraMode) {
-        switchToCamera(mode)
-    }
-
-    fun onIDVerificationNextStep(documentType: DocumentType) {
-        this.documentType = documentType
-        switchToWizard(documentType)
-    }
-
-    fun onPhotoConfirmationIsReadableStep() {
-        when (state) {
-            ZippyState.READY -> {
-                state = ZippyState.FACE_TAKEN
-            }
-            ZippyState.FACE_TAKEN -> {
-                state = if (documentType.value == DocumentMode.PASSPORT.value) ZippyState.READY_TO_SEND else ZippyState.DOC_FRONT_TAKEN
-            }
-            ZippyState.DOC_FRONT_TAKEN -> {
-                state = ZippyState.READY_TO_SEND
-            }
-        }
-        switchToWizard(documentType)
-    }
-
-    fun onPhotoConfirmationTakeNewPhotoStep(mode: CameraMode) {
-        switchToCamera(mode)
-    }
-
-    fun onCaptureCompleted(image: Bitmap) {
-        when (state) {
-            ZippyState.READY -> {
-                faceImage = image
-                faceImage?.let { switchToPhotoConfirmation(CameraMode.FACE) }
-            }
-            ZippyState.FACE_TAKEN -> {
-                documentFrontImage = image
-                documentFrontImage?.let { switchToPhotoConfirmation(CameraMode.DOCUMENT_FRONT) }
-            }
-            ZippyState.DOC_FRONT_TAKEN -> {
-                documentBackImage = image
-                documentBackImage?.let { switchToPhotoConfirmation(CameraMode.DOCUMENT_BACK) }
-            }
-            else -> throw IllegalStateException("Unknown state after capture! Crashing...")
-        }
-    }
-
-    fun sendImages(apiClient: ApiClient, documentType: DocumentType) {
-        if (documentType.value == null || faceImage == null || documentFrontImage == null) {
-            Log.e("ERROR", "Missing data")
-            state = ZippyState.LOADING
-            switchToWizard(documentType)
-            return
-        }
-
-        encodedFaceImage = faceImage!!.resize()!!.toEncodedPng()
-        encodedDocumentFrontImage = documentFrontImage!!.resize()!!.toEncodedPng()
-        encodedDocumentBackImage = documentBackImage?.resize()?.toEncodedPng()
-
-        apiClient.sendImages(documentType.value, encodedFaceImage!!, encodedDocumentFrontImage!!, encodedDocumentBackImage, sessionConfiguration.customerId!!, object : AsyncResponse<String?> {
-            override fun onSuccess(response: String?) {
-                state = ZippyState.DONE
-                response?.apply {
-                    pollJobStatus(apiClient, null, this)
-                }
-                Zippy.callback?.onSubmit()
-            }
-
-            override fun onError(error: VolleyError) {
-                sendErrorResult(error.toString())
-            }
-        })
-    }
-
-    var count = 0
-    fun pollJobStatus(apiClient: ApiClient, error: VolleyError?, verificationId: String) {
-        Log.i(TAG, "Trying to get status: $count")
-
-
-        if (count == 10) {
-            setResult(Activity.RESULT_CANCELED, null)
-            val returnIntent = Intent()
-
-            error?.let { returnIntent.putExtra(ZIPPY_RESULT, error.localizedMessage) } ?: run {
-                returnIntent.putExtra(ZIPPY_RESULT, "Request timed out")
-            }
-            finish()
-        }
-
-        apiClient
-            .getResult(sessionConfiguration.customerId!!, object : AsyncResponse<ZippyResponse?> {
-                override fun onSuccess(response: ZippyResponse?) {
-                    when {
-                        !response?.state.isNullOrEmpty() && response?.state != "processing"-> {
-                            getVerificationInformation(apiClient, verificationId, response)
-                        }
-                        else -> {
-                            Log.i(TAG, "Scheduling poll")
-                            count += 1
-                            Handler().postDelayed({
-                                pollJobStatus(apiClient, null, verificationId)
-                            }, 2000)
-
-                        }
-                    }
-                }
-
-                override fun onError(error: VolleyError) {
-                    Log.i(TAG, "Error")
-                    count += 1
-                    Handler().postDelayed({
-                        pollJobStatus(apiClient, error, verificationId)
-                    }, 2000)
-                }
-            })
-    }
-
-    fun getVerificationInformation(apiClient: ApiClient, verificationId: String, zippyResult: ZippyResponse?) {
-        apiClient
-            .checkVerificationStatus(verificationId, object : AsyncResponse<ZippyVerification?> {
-                override fun onSuccess(response: ZippyVerification?) {
-                    val returnIntent = Intent()
-                    zippyResult.let { returnIntent.putExtra(ZIPPY_RESULT, it) }
-
-                    when (response?.state) {
-                        "success" -> {
-                            Zippy.callback?.onFinished()
-                            setResult(Activity.RESULT_OK, returnIntent)
-                            finish()
-                        }
-                        "failed" -> {
-                            switchToErrorFragment(response)
-                        }
-                        else -> {}
-                    }
-                }
-
-                override fun onError(error: VolleyError) {
-                    setResult(Activity.RESULT_CANCELED, null)
-                    val returnIntent = Intent()
-                    returnIntent.putExtra(ZIPPY_RESULT, error.localizedMessage)
-                    finish()
-                }
-
-            })
-    }
-    
     fun sendErrorResult(message: String) {
         val returnIntent = Intent()
         returnIntent.putExtra(ZIPPY_RESULT, message)
@@ -228,28 +49,100 @@ class ZippyActivity : AppCompatActivity() {
         finish()
     }
 
-    private fun switchToCamera(mode: CameraMode) {
-        supportFragmentManager.beginTransaction().replace(R.id.fragment_container_fl, CameraFragment.newInstance(mode, documentType)).commit()
-        Log.d("ZIPPY", "Switched to camera!")
+    fun sendCancelledResult(error: VolleyError?) {
+        setResult(Activity.RESULT_CANCELED, null)
+        val returnIntent = Intent()
+        error?.let { returnIntent.putExtra(ZIPPY_RESULT, error.localizedMessage) } ?: run {
+            returnIntent.putExtra(ZIPPY_RESULT, "Request timed out")
+        }
+        finish()
     }
 
-    private fun switchToWizard(documentType: DocumentType) {
-        supportFragmentManager.beginTransaction().replace(R.id.fragment_container_fl, WizardFragment.newInstance(state, documentType)).commit()
-        Log.d("ZIPPY", "Switched to wizard!")
+    fun onPhotoIsReadableStep(viewModel: ZippyViewModel) {
+        when (viewModel.state) {
+            ZippyState.READY -> {
+                viewModel.setZippyState(ZippyState.FACE_TAKEN)
+            }
+            ZippyState.FACE_TAKEN -> {
+                if (getConfig().documentType.value == DocumentMode.PASSPORT.value) {
+                    viewModel.setZippyState(ZippyState.READY_TO_SEND)
+                } else {
+                    viewModel.setZippyState(ZippyState.DOC_FRONT_TAKEN)
+                }
+            }
+            ZippyState.DOC_FRONT_TAKEN -> {
+                viewModel.setZippyState(ZippyState.READY_TO_SEND)
+            }
+            else -> {}
+        }
+        switchToWizard()
+    }
+
+    fun onCaptureCompleted(image: Bitmap, viewModel: ZippyViewModel) {
+        when (viewModel.state) {
+            ZippyState.READY -> {
+                viewModel.faceImage = image
+                viewModel.setCameraMode(CameraMode.FACE)
+                viewModel.faceImage?.let {
+                    switchToPhotoConfirmation()
+                }
+            }
+            ZippyState.FACE_TAKEN -> {
+                viewModel.documentFrontImage = image
+                viewModel.setCameraMode(CameraMode.DOCUMENT_FRONT)
+                viewModel.documentFrontImage?.let {
+                    switchToPhotoConfirmation()
+                }
+            }
+            ZippyState.DOC_FRONT_TAKEN -> {
+                viewModel.documentBackImage = image
+                viewModel.setCameraMode(CameraMode.DOCUMENT_BACK)
+                viewModel.documentBackImage?.let {
+                    switchToPhotoConfirmation()
+                }
+            }
+            else -> throw IllegalStateException("Unknown state after capture! Crashing...")
+        }
+    }
+
+    fun toIDVerificationFragment() {
+        switchToIDVerification()
+    }
+
+    fun toCameraFragment() {
+        switchToCamera()
+    }
+
+    fun toWizardFragment() {
+        switchToWizard()
+    }
+
+    fun toErrorFragment() {
+        switchToErrorFragment()
+    }
+
+    private fun switchToCamera() {
+        supportFragmentManager.beginTransaction().replace(R.id.fragment_container_fl, CameraFragment()).commit()
+        Log.d(TAG, "Switched to camera!")
+    }
+
+    private fun switchToWizard() {
+        supportFragmentManager.beginTransaction().replace(R.id.fragment_container_fl, WizardFragment()).commit()
+        Log.d(TAG, "Switched to wizard!")
     }
 
     private fun switchToIDVerification() {
-        supportFragmentManager.beginTransaction().replace(R.id.fragment_container_fl, IDVertificationFragment()).commit()
-        Log.d("ZIPPY", "Switched to ID verification!")
+        supportFragmentManager.beginTransaction().replace(R.id.fragment_container_fl, IDVerificationFragment()).commit()
+        Log.d(TAG, "Switched to ID verification!")
     }
 
-    private fun switchToPhotoConfirmation(mode: CameraMode) {
-        supportFragmentManager.beginTransaction().replace(R.id.fragment_container_fl, PhotoConfirmationFragment.newInstance(mode, documentType)).commit()
-        Log.d("ZIPPY", "Switched to Photo confirmation!")
+    private fun switchToPhotoConfirmation() {
+        supportFragmentManager.beginTransaction().replace(R.id.fragment_container_fl, PhotoConfirmationFragment()).commit()
+        Log.d(TAG, "Switched to Photo confirmation!")
     }
 
-    private fun switchToErrorFragment(verification: ZippyVerification) {
-        supportFragmentManager.beginTransaction().replace(R.id.fragment_container_fl, ErrorFragment.newInstance(verification, documentType)).commit()
-        Log.d("ZIPPY", "Switched to Error fragment!")
+    private fun switchToErrorFragment() {
+        supportFragmentManager.beginTransaction().replace(R.id.fragment_container_fl, ErrorFragment()).commit()
+        Log.d(TAG, "Switched to Error fragment!")
     }
 }

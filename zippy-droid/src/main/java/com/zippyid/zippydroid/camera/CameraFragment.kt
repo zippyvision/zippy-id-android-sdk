@@ -24,6 +24,7 @@ import com.google.android.gms.vision.MultiProcessor
 import com.google.android.gms.vision.face.Face
 import com.google.android.gms.vision.face.FaceDetector
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProviders
 import java.io.IOException
 import java.lang.Exception
 import com.zippyid.zippydroid.ZippyActivity
@@ -31,9 +32,12 @@ import com.zippyid.zippydroid.network.model.DocumentType
 import com.zippyid.zippydroid.R
 import com.zippyid.zippydroid.camera.helpers.GraphicFaceTracker
 import com.zippyid.zippydroid.camera.helpers.GraphicFaceTrackerFactory
+import com.zippyid.zippydroid.viewModel.CameraMode
+import com.zippyid.zippydroid.viewModel.DocumentMode
+import com.zippyid.zippydroid.viewModel.ZippyViewModel
+import com.zippyid.zippydroid.viewModel.ZippyViewModelFactory
 import kotlinx.android.synthetic.main.fragment_camera.*
 import java.io.ByteArrayInputStream
-
 
 class CameraFragment : Fragment(), GraphicFaceTracker.FaceDetectorListener {
     override fun onFaceDetected(face: Face) {
@@ -44,22 +48,10 @@ class CameraFragment : Fragment(), GraphicFaceTracker.FaceDetectorListener {
         private const val TAG = "FaceTracker"
         private const val RC_HANDLE_GMS = 9001
         private const val RC_HANDLE_CAMERA_PERM = 2
-
-        private const val CAMERA_MODE = "camera_mode"
-        private const val DOCUMENT_TYPE = "document_type"
-
-        fun newInstance(
-            mode: ZippyActivity.CameraMode,
-            documentType: DocumentType?
-        ): CameraFragment {
-            val bundle = Bundle()
-            bundle.putSerializable(CameraFragment.CAMERA_MODE, mode)
-            bundle.putParcelable(CameraFragment.DOCUMENT_TYPE, documentType)
-            val fragment = CameraFragment()
-            fragment.arguments = bundle
-            return fragment
-        }
     }
+
+    private lateinit var viewModelFactory: ZippyViewModelFactory
+    private lateinit var viewModel: ZippyViewModel
 
     private var mCameraSource: CameraSource? = null
     private var mPreview: CameraSourcePreview? = null
@@ -72,22 +64,24 @@ class CameraFragment : Fragment(), GraphicFaceTracker.FaceDetectorListener {
     override fun onStart() {
         super.onStart()
 
-        arguments = arguments
-        val mode = arguments?.getSerializable(CameraFragment.CAMERA_MODE) as? ZippyActivity.CameraMode
-            ?: throw IllegalArgumentException("Mode was not passed to CameraFragment!")
-        val documentType = arguments?.getParcelable(CameraFragment.DOCUMENT_TYPE) as? DocumentType
-            ?: throw IllegalArgumentException("Document type was not passed to CameraFragment!")
+        viewModelFactory = ZippyViewModelFactory(context!!, (activity as ZippyActivity).getConfig())
+        viewModel = ViewModelProviders.of((activity as ZippyActivity), viewModelFactory).get(ZippyViewModel::class.java)
 
-        if (mode == ZippyActivity.CameraMode.FACE) {
-            showFaceFrame()
-            cameraId = CameraSource.CAMERA_FACING_FRONT
-            GraphicFaceTracker.mFaceDetectorListener = this
-        } else if (mode == ZippyActivity.CameraMode.DOCUMENT_FRONT) {
-            showDocumentFrontFrame(documentType)
-            cameraId = CameraSource.CAMERA_FACING_BACK
-        } else if (mode == ZippyActivity.CameraMode.DOCUMENT_BACK) {
-            showDocumentBackFrame(documentType)
-            cameraId = CameraSource.CAMERA_FACING_BACK
+        when (viewModel.mode) {
+            CameraMode.FACE -> {
+                showFaceFrame()
+                cameraId = CameraSource.CAMERA_FACING_FRONT
+                GraphicFaceTracker.mFaceDetectorListener = this
+            }
+            CameraMode.DOCUMENT_FRONT -> {
+                showDocumentFrontFrame((activity as ZippyActivity).getConfig().documentType)
+                cameraId = CameraSource.CAMERA_FACING_BACK
+            }
+            CameraMode.DOCUMENT_BACK -> {
+                showDocumentBackFrame((activity as ZippyActivity).getConfig().documentType)
+                cameraId = CameraSource.CAMERA_FACING_BACK
+            }
+            else -> {}
         }
 
         mPreview = cameraSourcePreview as CameraSourcePreview
@@ -117,7 +111,7 @@ class CameraFragment : Fragment(), GraphicFaceTracker.FaceDetectorListener {
             .setMode(FaceDetector.ACCURATE_MODE)
             .build()
         detector.setProcessor(
-            MultiProcessor.Builder<Face>(GraphicFaceTrackerFactory())
+            MultiProcessor.Builder(GraphicFaceTrackerFactory())
                 .build())
 
         mCameraSource = CameraSource.Builder(context, detector)
@@ -162,7 +156,7 @@ class CameraFragment : Fragment(), GraphicFaceTracker.FaceDetectorListener {
         Log.e(TAG, "Permission not granted: results len = " + grantResults.size +
                 " Result code = " + if (grantResults.isNotEmpty()) grantResults[0] else "(empty)")
 
-        val listener = DialogInterface.OnClickListener { dialog, id -> onStop() }
+        val listener = DialogInterface.OnClickListener { _, _ -> onStop() }
 
         val builder = AlertDialog.Builder(context!!)
         builder.setTitle("Face Tracker sample")
@@ -208,8 +202,7 @@ class CameraFragment : Fragment(), GraphicFaceTracker.FaceDetectorListener {
                 val byteArrayInputStream = ByteArrayInputStream(data)
                 exifInterface = ExifInterface(byteArrayInputStream)
                 var rotationDegrees = 0F
-                val orientation = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION, 1)
-                when (orientation) {
+                when (exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION, 1)) {
                     ExifInterface.ORIENTATION_ROTATE_90 -> {
                         rotationDegrees = 90F
                     }
@@ -222,7 +215,7 @@ class CameraFragment : Fragment(), GraphicFaceTracker.FaceDetectorListener {
                 val rotateMatrix = Matrix()
                 rotateMatrix.postRotate(rotationDegrees)
                 rotatedImage = Bitmap.createBitmap(loadedImage, 0, 0, loadedImage.width, loadedImage.height, rotateMatrix, false)
-                (activity as ZippyActivity).onCaptureCompleted(rotatedImage)
+                (activity as ZippyActivity).onCaptureCompleted(rotatedImage, viewModel)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -245,15 +238,15 @@ class CameraFragment : Fragment(), GraphicFaceTracker.FaceDetectorListener {
         documentBackFrameLl.visibility = View.INVISIBLE
 
         when (documentType.value) {
-            ZippyActivity.DocumentMode.PASSPORT.value -> {
+            DocumentMode.PASSPORT.value -> {
                 titleTv.text = getString(R.string.passport)
                 descriptionTv.text = getString(R.string.position_passport_text)
             }
-            ZippyActivity.DocumentMode.DRIVERS_LICENCE.value -> {
+            DocumentMode.DRIVERS_LICENCE.value -> {
                 titleTv.text = getString(R.string.driver_license_front)
                 descriptionTv.text = getString(R.string.position_driver_license_front)
             }
-            ZippyActivity.DocumentMode.ID_CARD.value -> {
+            DocumentMode.ID_CARD.value -> {
                 titleTv.text = getString(R.string.id_card_front)
                 descriptionTv.text = getString(R.string.position_id_card_front)
             }
@@ -266,11 +259,11 @@ class CameraFragment : Fragment(), GraphicFaceTracker.FaceDetectorListener {
         documentBackFrameLl.visibility = View.VISIBLE
 
         when (documentType.value) {
-            ZippyActivity.DocumentMode.DRIVERS_LICENCE.value -> {
+            DocumentMode.DRIVERS_LICENCE.value -> {
                 titleTv.text = getString(R.string.driver_license_back)
                 descriptionTv.text = getString(R.string.position_driver_license_back)
             }
-            ZippyActivity.DocumentMode.ID_CARD.value -> {
+            DocumentMode.ID_CARD.value -> {
                 titleTv.text = getString(R.string.id_card_back)
                 descriptionTv.text = getString(R.string.position_id_card_back)
             }
