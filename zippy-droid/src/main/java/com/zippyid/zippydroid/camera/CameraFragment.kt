@@ -25,6 +25,7 @@ import com.google.android.gms.vision.face.Face
 import com.google.android.gms.vision.face.FaceDetector
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
+import androidx.navigation.fragment.findNavController
 import java.io.IOException
 import java.lang.Exception
 import com.zippyid.zippydroid.ZippyActivity
@@ -32,11 +33,11 @@ import com.zippyid.zippydroid.network.model.DocumentType
 import com.zippyid.zippydroid.R
 import com.zippyid.zippydroid.camera.helpers.GraphicFaceTracker
 import com.zippyid.zippydroid.camera.helpers.GraphicFaceTrackerFactory
+import com.zippyid.zippydroid.databinding.FragmentCameraBinding
 import com.zippyid.zippydroid.viewModel.CameraMode
 import com.zippyid.zippydroid.viewModel.DocumentMode
 import com.zippyid.zippydroid.viewModel.ZippyViewModel
 import com.zippyid.zippydroid.viewModel.ZippyViewModelFactory
-import kotlinx.android.synthetic.main.fragment_camera.*
 import java.io.ByteArrayInputStream
 
 class CameraFragment : Fragment(), GraphicFaceTracker.FaceDetectorListener {
@@ -53,19 +54,22 @@ class CameraFragment : Fragment(), GraphicFaceTracker.FaceDetectorListener {
     private lateinit var viewModelFactory: ZippyViewModelFactory
     private lateinit var viewModel: ZippyViewModel
 
+    private lateinit var binding: FragmentCameraBinding
+
     private var mCameraSource: CameraSource? = null
     private var mPreview: CameraSourcePreview? = null
     private var cameraId = CameraSource.CAMERA_FACING_FRONT
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.fragment_camera, container, false)
+        binding = FragmentCameraBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
     override fun onStart() {
         super.onStart()
 
         viewModelFactory = ZippyViewModelFactory(context!!, (activity as ZippyActivity).getConfig())
-        viewModel = ViewModelProviders.of((activity as ZippyActivity), viewModelFactory).get(ZippyViewModel::class.java)
+        viewModel = ViewModelProviders.of(activity!!, viewModelFactory).get(ZippyViewModel::class.java)
 
         when (viewModel.mode) {
             CameraMode.FACE -> {
@@ -84,12 +88,12 @@ class CameraFragment : Fragment(), GraphicFaceTracker.FaceDetectorListener {
             else -> {}
         }
 
-        mPreview = cameraSourcePreview as CameraSourcePreview
+        mPreview = binding.cameraSourcePreview
 
         val rc = ActivityCompat.checkSelfPermission(context!!, Manifest.permission.CAMERA)
         if (rc == PackageManager.PERMISSION_GRANTED) {
             createCameraSource()
-            takePictureBtn.setOnClickListener { takePhoto() }
+            binding.takePictureBtn.setOnClickListener { takePhoto() }
         } else {
             requestCameraPermission()
         }
@@ -215,57 +219,65 @@ class CameraFragment : Fragment(), GraphicFaceTracker.FaceDetectorListener {
                 val rotateMatrix = Matrix()
                 rotateMatrix.postRotate(rotationDegrees)
                 rotatedImage = Bitmap.createBitmap(loadedImage, 0, 0, loadedImage.width, loadedImage.height, rotateMatrix, false)
-                (activity as ZippyActivity).onCaptureCompleted(rotatedImage, viewModel)
+
+                viewModel.addImage(rotatedImage)
+                findNavController().navigate(R.id.action_cameraFragment_to_photoConfirmationFragment)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
         }
-        mCameraSource!!.takePicture(null, callback)
+        mCameraSource!!.takePicture(null, callback) // kpc sis?!
     }
 
     private fun showFaceFrame() {
-        faceFrameLl.visibility = View.VISIBLE
-        documentFrontFrameLl.visibility = View.INVISIBLE
-        documentBackFrameLl.visibility = View.INVISIBLE
+        binding.apply {
+            faceFrameLl.visibility = View.VISIBLE
+            documentFrontFrameLl.visibility = View.INVISIBLE
+            documentBackFrameLl.visibility = View.INVISIBLE
 
-        titleTv.text = ""
-        descriptionTv.text = ""
+            titleTv.text = ""
+            descriptionTv.text = ""
+        }
     }
 
     private fun showDocumentFrontFrame(documentType: DocumentType) {
-        faceFrameLl.visibility = View.INVISIBLE
-        documentFrontFrameLl.visibility = View.VISIBLE
-        documentBackFrameLl.visibility = View.INVISIBLE
+        binding.apply {
+            faceFrameLl.visibility = View.INVISIBLE
+            documentFrontFrameLl.visibility = View.VISIBLE
+            documentBackFrameLl.visibility = View.INVISIBLE
 
-        when (documentType.value) {
-            DocumentMode.PASSPORT.value -> {
-                titleTv.text = getString(R.string.passport)
-                descriptionTv.text = getString(R.string.position_passport_text)
-            }
-            DocumentMode.DRIVERS_LICENCE.value -> {
-                titleTv.text = getString(R.string.driver_license_front)
-                descriptionTv.text = getString(R.string.position_driver_license_front)
-            }
-            DocumentMode.ID_CARD.value -> {
-                titleTv.text = getString(R.string.id_card_front)
-                descriptionTv.text = getString(R.string.position_id_card_front)
+            when (documentType.value) {
+                DocumentMode.PASSPORT.value -> {
+                    titleTv.text = getString(R.string.passport)
+                    descriptionTv.text = getString(R.string.position_passport_text)
+                }
+                DocumentMode.DRIVERS_LICENCE.value -> {
+                    titleTv.text = getString(R.string.driver_license_front)
+                    descriptionTv.text = getString(R.string.position_driver_license_front)
+                }
+                DocumentMode.ID_CARD.value -> {
+                    titleTv.text = getString(R.string.id_card_front)
+                    descriptionTv.text = getString(R.string.position_id_card_front)
+                }
             }
         }
     }
 
     private fun showDocumentBackFrame(documentType: DocumentType) {
-        faceFrameLl.visibility = View.INVISIBLE
-        documentFrontFrameLl.visibility = View.INVISIBLE
-        documentBackFrameLl.visibility = View.VISIBLE
+        binding.apply {
+            faceFrameLl.visibility = View.INVISIBLE
+            documentFrontFrameLl.visibility = View.INVISIBLE
+            documentBackFrameLl.visibility = View.VISIBLE
 
-        when (documentType.value) {
-            DocumentMode.DRIVERS_LICENCE.value -> {
-                titleTv.text = getString(R.string.driver_license_back)
-                descriptionTv.text = getString(R.string.position_driver_license_back)
-            }
-            DocumentMode.ID_CARD.value -> {
-                titleTv.text = getString(R.string.id_card_back)
-                descriptionTv.text = getString(R.string.position_id_card_back)
+            when (documentType.value) {
+                DocumentMode.DRIVERS_LICENCE.value -> {
+                    titleTv.text = getString(R.string.driver_license_back)
+                    descriptionTv.text = getString(R.string.position_driver_license_back)
+                }
+                DocumentMode.ID_CARD.value -> {
+                    titleTv.text = getString(R.string.id_card_back)
+                    descriptionTv.text = getString(R.string.position_id_card_back)
+                }
             }
         }
     }

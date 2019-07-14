@@ -6,34 +6,39 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.ViewModelProviders
+import androidx.navigation.fragment.findNavController
 import com.zippyid.zippydroid.R
 import com.zippyid.zippydroid.ZippyActivity
+import com.zippyid.zippydroid.databinding.FragmentPhotoConfirmationBinding
 import com.zippyid.zippydroid.viewModel.CameraMode
 import com.zippyid.zippydroid.viewModel.ZippyViewModel
 import com.zippyid.zippydroid.viewModel.ZippyViewModelFactory
-import kotlinx.android.synthetic.main.fragment_photo_confirmation.*
 
 class PhotoConfirmationFragment: Fragment()  {
     lateinit var viewModelFactory: ZippyViewModelFactory
     private lateinit var viewModel: ZippyViewModel
 
+    private lateinit var binding: FragmentPhotoConfirmationBinding
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.fragment_photo_confirmation, container, false)
+        binding = FragmentPhotoConfirmationBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         viewModelFactory = ZippyViewModelFactory(context!!, (activity as ZippyActivity).getConfig())
-        viewModel = ViewModelProviders.of((activity as ZippyActivity), viewModelFactory).get(ZippyViewModel::class.java)
+        viewModel = ViewModelProviders.of(activity!!, viewModelFactory).get(ZippyViewModel::class.java)
 
         adjustForMode()
 
-        isReadableBtn.setOnClickListener {
-            (activity as? ZippyActivity)?.onPhotoIsReadableStep(viewModel)
+        binding.isReadableBtn.setOnClickListener {
+            viewModel.switchState()
+            findNavController().navigate(R.id.action_photoConfirmationFragment_to_wizardFragment)
         }
-        takePhotoBtn.setOnClickListener {
-            (activity as? ZippyActivity)?.toCameraFragment()
+        binding.takePhotoBtn.setOnClickListener {
+            findNavController().navigate(R.id.action_photoConfirmationFragment_to_cameraFragment)
         }
     }
 
@@ -41,19 +46,25 @@ class PhotoConfirmationFragment: Fragment()  {
         val documentTypeLabel: String? = if ((activity as ZippyActivity).getConfig().documentType.value == "id_card") (activity as ZippyActivity).getConfig().documentType.label else (activity as ZippyActivity).getConfig().documentType.label!!.toLowerCase()
         when(viewModel.mode) {
             CameraMode.FACE -> {
-                descriptionTv.text = resources.getString(R.string.check_face)
-                isReadableBtn.text = resources.getString(R.string.face_recognizable)
-                photoIv.setImageBitmap(viewModel.faceImage)
+                binding.apply {
+                    descriptionTv.text = resources.getString(R.string.check_face)
+                    isReadableBtn.text = resources.getString(R.string.face_recognizable)
+                    photoIv.setImageBitmap(viewModel.faceImage)
+                }
             }
             CameraMode.DOCUMENT_FRONT -> {
-                descriptionTv.text = getString(R.string.check_document, documentTypeLabel)
-                isReadableBtn.text = getString(R.string.document_recognizable, documentTypeLabel)
-                photoIv.setImageBitmap(viewModel.documentFrontImage)
+                binding.apply {
+                    descriptionTv.text = getString(R.string.check_document, documentTypeLabel)
+                    isReadableBtn.text = getString(R.string.document_recognizable, documentTypeLabel)
+                    photoIv.setImageBitmap(viewModel.documentFrontImage)
+                }
             }
             CameraMode.DOCUMENT_BACK -> {
-                descriptionTv.text = getString(R.string.check_document, documentTypeLabel)
-                isReadableBtn.text = getString(R.string.document_recognizable, documentTypeLabel)
-                photoIv.setImageBitmap(viewModel.documentBackImage)
+                binding.apply {
+                    descriptionTv.text = getString(R.string.check_document, documentTypeLabel)
+                    isReadableBtn.text = getString(R.string.document_recognizable, documentTypeLabel)
+                    photoIv.setImageBitmap(viewModel.documentBackImage)
+                }
             }
         }
     }

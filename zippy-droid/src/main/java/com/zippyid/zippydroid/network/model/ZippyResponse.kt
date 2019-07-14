@@ -1,4 +1,5 @@
 package com.zippyid.zippydroid.network.model
+
 import android.os.Parcel
 import android.os.Parcelable
 import com.google.gson.annotations.SerializedName
@@ -33,8 +34,7 @@ data class ZippyResponse(
         parcel.readParcelable(ProcessingErrors::class.java.classLoader),
         parcel.readParcelable(SimilarFaces::class.java.classLoader),
         parcel.readString()
-    ) {
-    }
+    )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeString(createdAt)

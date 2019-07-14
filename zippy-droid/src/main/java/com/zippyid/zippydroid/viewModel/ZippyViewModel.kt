@@ -12,7 +12,7 @@ import com.zippyid.zippydroid.network.ApiClient
 import com.zippyid.zippydroid.network.AsyncResponse
 import com.zippyid.zippydroid.network.model.*
 
-class ZippyViewModel(private val apiClient: ApiClient, val configuration: SessionConfig): ViewModel() {
+class ZippyViewModel(private val apiClient: ApiClient, private val configuration: SessionConfig): ViewModel() {
     companion object {
         private const val TAG = "ZippyViewModel"
     }
@@ -24,6 +24,8 @@ class ZippyViewModel(private val apiClient: ApiClient, val configuration: Sessio
     private var _cameraMode = MutableLiveData<CameraMode>()
     private var _countries = MutableLiveData<List<Country>>()
     private var _verificationStateAndZippyResult = MutableLiveData<Pair<ZippyVerification, ZippyResponse>>()
+
+    private var count = 0
 
     init {
         Log.d(TAG, "injecting ZippyViewModel")
@@ -39,7 +41,6 @@ class ZippyViewModel(private val apiClient: ApiClient, val configuration: Sessio
 
     var state: ZippyState = ZippyState.LOADING
     var mode: CameraMode? = null
-    var verification: ZippyVerification? = null
 
     var faceImage: Bitmap? = null
     var documentFrontImage: Bitmap? = null
@@ -103,7 +104,6 @@ class ZippyViewModel(private val apiClient: ApiClient, val configuration: Sessio
         })
     }
 
-    var count = 0
     fun pollJobStatus(error: VolleyError?, verificationId: String) {
         Log.i(TAG, "Trying to get status: $count")
 
@@ -127,7 +127,6 @@ class ZippyViewModel(private val apiClient: ApiClient, val configuration: Sessio
                         }
                     }
                 }
-
                 override fun onError(error: VolleyError) {
                     Log.i(TAG, "Error")
                     count += 1
@@ -143,14 +142,55 @@ class ZippyViewModel(private val apiClient: ApiClient, val configuration: Sessio
             .checkVerificationStatus(verificationId, object : AsyncResponse<ZippyVerification?> {
                 override fun onSuccess(response: ZippyVerification?) {
                     response?.apply {
-                        verification = response
                         _verificationStateAndZippyResult.value = Pair(response, zippyResponse)
+                    }
+                    response?.requestToken?.apply {
+                        applyNewToken(this)
                     }
                 }
                 override fun onError(error: VolleyError) {
                     _volleyError.value = error
                 }
             })
+    }
+
+    fun addImage(image: Bitmap) {
+        when (state) {
+            ZippyState.READY -> {
+                faceImage = image
+                setCameraMode(CameraMode.FACE)
+            }
+            ZippyState.FACE_TAKEN -> {
+                documentFrontImage = image
+                setCameraMode(CameraMode.DOCUMENT_FRONT)
+            }
+            ZippyState.DOC_FRONT_TAKEN -> {
+                documentBackImage = image
+                setCameraMode(CameraMode.DOCUMENT_BACK)
+            }
+            else -> throw IllegalStateException("Unknown state after capture! Crashing...")
+        }
+    }
+
+    fun switchState() {
+        when (state) {
+            ZippyState.READY -> {
+                setZippyState(ZippyState.FACE_TAKEN)
+            }
+            ZippyState.FACE_TAKEN -> {
+                setZippyState(
+                    if (configuration.documentType.value == DocumentMode.PASSPORT.value) {
+                        ZippyState.READY_TO_SEND
+                    } else {
+                        ZippyState.DOC_FRONT_TAKEN
+                    }
+                )
+            }
+            ZippyState.DOC_FRONT_TAKEN -> {
+                setZippyState(ZippyState.READY_TO_SEND)
+            }
+            else -> {}
+        }
     }
 }
 

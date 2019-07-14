@@ -9,18 +9,21 @@ import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import androidx.lifecycle.ViewModelProviders
+import androidx.navigation.fragment.findNavController
 import com.zippyid.zippydroid.R
 import com.zippyid.zippydroid.ZippyActivity
+import com.zippyid.zippydroid.databinding.FragmentIdVerificationBinding
 import com.zippyid.zippydroid.extension.observeLiveData
 import com.zippyid.zippydroid.network.model.Country
 import com.zippyid.zippydroid.network.model.DocumentType
 import com.zippyid.zippydroid.viewModel.ZippyViewModel
 import com.zippyid.zippydroid.viewModel.ZippyViewModelFactory
-import kotlinx.android.synthetic.main.fragment_id_vertification.*
 
 class IDVerificationFragment : Fragment() {
     private lateinit var viewModelFactory: ZippyViewModelFactory
     private lateinit var viewModel: ZippyViewModel
+
+    private lateinit var binding: FragmentIdVerificationBinding
 
     var countries: List<Country> = ArrayList()
     var selectedCountry: Country? = null
@@ -33,7 +36,8 @@ class IDVerificationFragment : Fragment() {
     private var documentTypeSpinnerOnItemSelectedListener: AdapterView.OnItemSelectedListener? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.fragment_id_vertification, container, false)
+        binding = FragmentIdVerificationBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -41,11 +45,11 @@ class IDVerificationFragment : Fragment() {
         countryAdapter = ArrayAdapter(context!!, android.R.layout.simple_spinner_dropdown_item)
         documentAdapter = ArrayAdapter(context!!, android.R.layout.simple_spinner_dropdown_item)
 
-        countrySpinner.adapter = countryAdapter
-        documentSpinner.adapter = documentAdapter
+        binding.countrySpinner.adapter = countryAdapter
+        binding.documentSpinner.adapter = documentAdapter
 
         viewModelFactory = ZippyViewModelFactory(context!!, (activity as ZippyActivity).getConfig())
-        viewModel = ViewModelProviders.of((activity as ZippyActivity), viewModelFactory).get(ZippyViewModel::class.java)
+        viewModel = ViewModelProviders.of(activity!!, viewModelFactory).get(ZippyViewModel::class.java)
 
         observeLiveData()
         viewModel.getCountries()
@@ -53,7 +57,7 @@ class IDVerificationFragment : Fragment() {
         countrySpinnerOnItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 selectedCountry = countries[position]
-                documentSpinner.setSelection(0, false)
+                binding.documentSpinner.setSelection(0, false)
                 selectedDocumentType = selectedCountry?.documentTypes!!.first()
                 documentAdapter.clear()
                 documentAdapter.addAll(selectedCountry?.documentTypes!!.map { it.label })
@@ -72,11 +76,11 @@ class IDVerificationFragment : Fragment() {
             }
         }
 
-        continueBtn.setOnClickListener {
+        binding.continueBtn.setOnClickListener {
             selectedDocumentType?.apply {
                 (activity as ZippyActivity).getConfig().documentType = this
             }
-            (activity as? ZippyActivity)?.toWizardFragment()
+            findNavController().navigate(R.id.action_idVerificationFragment_to_wizardFragment)
         }
     }
 
@@ -89,8 +93,8 @@ class IDVerificationFragment : Fragment() {
             countryAdapter.addAll(countries.map { it.label })
             documentAdapter.addAll(selectedCountry?.documentTypes!!.map { it.label })
 
-            countrySpinner.onItemSelectedListener = countrySpinnerOnItemSelectedListener
-            documentSpinner.onItemSelectedListener = documentTypeSpinnerOnItemSelectedListener
+            binding.countrySpinner.onItemSelectedListener = countrySpinnerOnItemSelectedListener
+            binding.documentSpinner.onItemSelectedListener = documentTypeSpinnerOnItemSelectedListener
         }
         viewLifecycleOwner.observeLiveData(viewModel.volleyErrorLiveData) {
             Log.e("error", it.toString())
