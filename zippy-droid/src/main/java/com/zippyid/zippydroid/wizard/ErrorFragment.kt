@@ -32,7 +32,9 @@ class ErrorFragment: Fragment()  {
         viewModel = ViewModelProviders.of(activity!!, viewModelFactory).get(ZippyViewModel::class.java)
 
         val errorMessage = viewModel.verificationStateAndZippyResult.value?.first?.error
-        binding.descriptionTv.text = if (errorMessage != null) resources.getString(R.string.reason_for_failure, errorMessage) else resources.getString(R.string.reason_unknown)
+        binding.descriptionTv.text =
+            if (errorMessage != null) resources.getString(R.string.reason_for_failure, errorMessage)
+            else resources.getString(R.string.reason_unknown)
 
         binding.retryBtn.setOnClickListener {
             viewModel.setZippyState(ZippyState.RETRY)

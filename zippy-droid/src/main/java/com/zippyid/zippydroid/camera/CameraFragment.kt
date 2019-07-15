@@ -226,7 +226,7 @@ class CameraFragment : Fragment(), GraphicFaceTracker.FaceDetectorListener {
                 e.printStackTrace()
             }
         }
-        mCameraSource!!.takePicture(null, callback) // kpc sis?!
+        mCameraSource!!.takePicture(null, callback)
     }
 
     private fun showFaceFrame() {

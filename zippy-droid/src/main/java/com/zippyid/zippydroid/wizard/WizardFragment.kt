@@ -7,7 +7,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.fragment.findNavController
-import com.android.volley.AuthFailureError
 import com.zippyid.zippydroid.R
 import com.zippyid.zippydroid.Zippy
 import com.zippyid.zippydroid.ZippyActivity
@@ -45,14 +44,6 @@ class WizardFragment : Fragment() {
             viewModel.pollJobStatus( null, it)
             Zippy.callback?.onSubmit()
         }
-        viewLifecycleOwner.observeLiveData(viewModel.volleyErrorLiveData) {
-            val message = if (it is AuthFailureError) {
-                "Authorization error!"
-            } else {
-                "Unexpected error!"
-            }
-            (activity as ZippyActivity).sendErrorResult(message)
-        }
         viewLifecycleOwner.observeLiveData(viewModel.cameraModeLiveData) { mode ->
             binding.zippyBtn.setOnClickListener {
                 if (mode != CameraMode.NONE) {
@@ -69,16 +60,9 @@ class WizardFragment : Fragment() {
             }
         }
         viewLifecycleOwner.observeLiveData(viewModel.verificationStateAndZippyResult) { (verification, response) ->
-            if (verification.state == "success" && viewModel.state == ZippyState.DONE) {
-                (activity as ZippyActivity).sendSuccessfulResult(response)
-            } else if (verification.state == "failed" && viewModel.state == ZippyState.DONE) {
+            if (verification.state == "failed" && viewModel.state == ZippyState.DONE) {
                 findNavController().navigate(R.id.action_wizardFragment_to_errorFragment)
-            } else if (viewModel.state == ZippyState.DONE) {
-                (activity as ZippyActivity).sendErrorResult("Unknown error")
             }
-        }
-        viewLifecycleOwner.observeLiveData(viewModel.shouldStopLiveData) {
-            (activity as ZippyActivity).sendCancelledResult(it.second)
         }
     }
 

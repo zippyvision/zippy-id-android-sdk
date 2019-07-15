@@ -7,6 +7,7 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.android.volley.AuthFailureError
 import com.android.volley.VolleyError
 import com.zippyid.zippydroid.network.ApiClient
 import com.zippyid.zippydroid.network.AsyncResponse
@@ -18,12 +19,14 @@ class ZippyViewModel(private val apiClient: ApiClient, private val configuration
     }
 
     private var _zippyState = MutableLiveData<ZippyState>()
-    private var _stopSending = MutableLiveData<Pair<Boolean, VolleyError?>>()
     private var _volleyError = MutableLiveData<VolleyError>()
     private var _verificationId = MutableLiveData<String>()
     private var _cameraMode = MutableLiveData<CameraMode>()
     private var _countries = MutableLiveData<List<Country>>()
     private var _verificationStateAndZippyResult = MutableLiveData<Pair<ZippyVerification, ZippyResponse>>()
+    private var _sendSuccessfulResult = MutableLiveData<ZippyResponse>()
+    private var _sendCanceledResult = MutableLiveData<VolleyError?>()
+    private var _sendErrorResult = MutableLiveData<String>()
 
     private var count = 0
 
@@ -32,12 +35,14 @@ class ZippyViewModel(private val apiClient: ApiClient, private val configuration
     }
 
     val zippyStateLiveData: LiveData<ZippyState> = _zippyState
-    val shouldStopLiveData: LiveData<Pair<Boolean, VolleyError?>> = _stopSending
     val volleyErrorLiveData: LiveData<VolleyError> = _volleyError
     val verificationIdLiveData: LiveData<String> = _verificationId
     val cameraModeLiveData: LiveData<CameraMode> = _cameraMode
     val countriesLiveData: LiveData<List<Country>> = _countries
     val verificationStateAndZippyResult: LiveData<Pair<ZippyVerification, ZippyResponse>> = _verificationStateAndZippyResult
+    val sendSuccessfulResultLiveData: LiveData<ZippyResponse> = _sendSuccessfulResult
+    val sendCanceledResultLiveData: LiveData<VolleyError?> = _sendCanceledResult
+    val sendErrorResultLiveData: LiveData<String> = _sendErrorResult
 
     var state: ZippyState = ZippyState.LOADING
     var mode: CameraMode? = null
@@ -62,7 +67,12 @@ class ZippyViewModel(private val apiClient: ApiClient, private val configuration
                 setZippyState(ZippyState.READY)
             }
             override fun onError(error: VolleyError) {
-                _volleyError.value = error
+                val message = if (error is AuthFailureError) {
+                    "Authorization error!"
+                } else {
+                    "Unexpected error!"
+                }
+                _sendErrorResult.value = message
             }
         })
     }
@@ -99,7 +109,12 @@ class ZippyViewModel(private val apiClient: ApiClient, private val configuration
                 _verificationId.value = response
             }
             override fun onError(error: VolleyError) {
-                _volleyError.value = error
+                val message = if (error is AuthFailureError) {
+                    "Authorization error!"
+                } else {
+                    "Unexpected error!"
+                }
+                _sendErrorResult.value = message
             }
         })
     }
@@ -108,7 +123,7 @@ class ZippyViewModel(private val apiClient: ApiClient, private val configuration
         Log.i(TAG, "Trying to get status: $count")
 
         if (count == 10) {
-            _stopSending.value = Pair(true, error)
+            _sendCanceledResult.value = error
         }
 
         apiClient
@@ -143,6 +158,7 @@ class ZippyViewModel(private val apiClient: ApiClient, private val configuration
                 override fun onSuccess(response: ZippyVerification?) {
                     response?.apply {
                         _verificationStateAndZippyResult.value = Pair(response, zippyResponse)
+                        processVerification(response, zippyResponse)
                     }
                     response?.requestToken?.apply {
                         applyNewToken(this)
@@ -152,6 +168,14 @@ class ZippyViewModel(private val apiClient: ApiClient, private val configuration
                     _volleyError.value = error
                 }
             })
+    }
+
+    fun processVerification(verification: ZippyVerification, zippyResponse: ZippyResponse) {
+        if (verification.state == "success" && state == ZippyState.DONE) {
+            _sendSuccessfulResult.value = zippyResponse
+        } else if (verification.state != "failed" && state == ZippyState.DONE) {
+            _sendErrorResult.value = "Unknown error"
+        }
     }
 
     fun addImage(image: Bitmap) {

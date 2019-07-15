@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.NavController
 import androidx.navigation.findNavController
 import com.android.volley.VolleyError
+import com.zippyid.zippydroid.extension.observeLiveData
 import com.zippyid.zippydroid.network.model.SessionConfig
 import com.zippyid.zippydroid.network.model.ZippyResponse
 import com.zippyid.zippydroid.viewModel.*
@@ -34,6 +35,19 @@ class ZippyActivity : AppCompatActivity() {
 
         viewModelFactory = ZippyViewModelFactory(this, getConfig())
         viewModel = ViewModelProviders.of(this, viewModelFactory).get(ZippyViewModel::class.java)
+        observeLiveData()
+    }
+
+    private fun observeLiveData() {
+        this.observeLiveData(viewModel.sendSuccessfulResultLiveData) {
+            sendSuccessfulResult(it)
+        }
+        this.observeLiveData(viewModel.sendCanceledResultLiveData) {
+            sendCancelledResult(it)
+        }
+        this.observeLiveData(viewModel.sendErrorResultLiveData) {
+            sendErrorResult(it)
+        }
     }
 
     fun sendSuccessfulResult(response: ZippyResponse) {
