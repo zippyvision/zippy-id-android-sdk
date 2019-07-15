@@ -1,4 +1,5 @@
 package com.zippyid.zippydroid
+
 import com.zippyid.zippydroid.network.model.ZippyCallback
 
 object Zippy {

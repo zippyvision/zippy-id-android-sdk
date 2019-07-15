@@ -4,11 +4,9 @@ import android.os.Parcel
 import android.os.Parcelable
 
 class SimilarFaces() : Parcelable {
-    constructor(parcel: Parcel) : this() {
-    }
+    constructor(parcel: Parcel) : this()
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
-
     }
 
     override fun describeContents(): Int {

@@ -19,4 +19,15 @@
     <string name="id_card_back">Back of ID card</string>
     <string name="position_driver_license_back">Position the back of your license in the frame</string>
     <string name="position_id_card_back">Position the back of your ID card in the frame</string>
+    <string name="take_selfie">Take selfie</string>
+    <string name="take_document_front">Take document front</string>
+    <string name="take_document_back">Take document back</string>
+    <string name="send_info">Send info!</string>
+    <string name="processing">Processing...</string>
+    <string name="check_face">Make sure your face is recognizable, with no blur or glare</string>
+    <string name="face_recognizable">My face is recognizable</string>
+    <string name="check_document">Make sure your %s details are clear to read, with no blur or glare</string>
+    <string name="document_recognizable">My %s ir readable</string>
+    <string name="reason_for_failure">Reason: %s</string>
+    <string name="reason_unknown">Reason: unknown</string>
 </resources>

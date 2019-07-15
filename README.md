@@ -23,11 +23,16 @@ allprojects {
 }
 ```
 
-and in your app's build gradle add the dependency
+and in your app's build gradle enable data binding and add the dependency:
 
 `implementation 'com.github.zippyvision:zippy-id-android-sdk:0.10'`
 
 ```
+android {
+   ...
+   dataBinding.enabled = true
+}
+
 dependencies {
    implementation 'com.github.zippyvision:zippy-id-android-sdk:0.10'
 }
